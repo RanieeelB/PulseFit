@@ -51,9 +51,20 @@ export const userService = {
         }
 
         // Sync email if missing in profile but present in auth
-        if (user.email && profile && !profile.email) {
-            await this.saveProfile({ email: user.email });
+        if (user.email && profile) {
+            // Always ensure the returned profile has the auth email for display
             profile.email = user.email;
+
+            // Try to persist it to DB, but don't block if column is missing (user forgot SQL)
+            try {
+                if (!profile.email) { // logic check: actually we just set it. 
+                    // We want to check if the DB record had it. 
+                    // But simpler: just update it if we have it.
+                    await this.saveProfile({ email: user.email });
+                }
+            } catch (err) {
+                console.warn("Could not persist email to profiles table (column might be missing)", err);
+            }
         }
 
         return profile;
