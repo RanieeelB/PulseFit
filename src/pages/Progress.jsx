@@ -241,6 +241,50 @@ export default function Progress() {
         setShowWeightModal(true);
     };
 
+    // History Modal State
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [selectedExercise, setSelectedExercise] = useState(null);
+    const [exerciseHistory, setExerciseHistory] = useState([]);
+    const [selectedMuscle, setSelectedMuscle] = useState('Todos');
+
+    // Muscle Group Mapping (Simple manual map for now, ideally from DB)
+    const muscleGroups = {
+        'Peito': ['Supino', 'Crucifixo', 'Peitoral', 'Push Up', 'Flexão'],
+        'Costas': ['Puxada', 'Remada', 'Pull Down', 'Barra Fixa', 'Levantamento Terra'],
+        'Pernas': ['Agachamento', 'Leg Press', 'Extensora', 'Flexora', 'Panturrilha', 'Stiff', 'Afundo'],
+        'Ombros': ['Desenvolvimento', 'Elevação', 'Face Pull', 'Militar'],
+        'Braços': ['Rosca', 'Tríceps', 'Mergulho', 'Martelo'],
+        'Abdômen': ['Abdominal', 'Prancha', 'Infra', 'Obliquo']
+    };
+
+    const getMuscleGroup = (name) => {
+        const lowerName = name.toLowerCase();
+        for (const [group, keywords] of Object.entries(muscleGroups)) {
+            if (keywords.some(k => lowerName.includes(k.toLowerCase()))) return group;
+        }
+        return 'Outros';
+    };
+
+    const filteredPrs = selectedMuscle === 'Todos'
+        ? prs
+        : prs.filter(pr => getMuscleGroup(pr.exercise_name) === selectedMuscle);
+
+    const openExerciseHistory = async (pr) => {
+        setSelectedExercise(pr);
+        setShowHistoryModal(true);
+        setExerciseHistory([]); // Reset while loading
+        try {
+            const history = await workoutService.getExerciseHistory(pr.exercise_name);
+            setExerciseHistory(history.map(h => ({
+                value: h.weight,
+                date: h.date,
+                reps: h.reps || 0
+            })));
+        } catch (error) {
+            console.error("Failed to load history", error);
+        }
+    };
+
     const handleSaveWeight = async () => {
         if (!weightForm.weight) return;
         try {
@@ -433,17 +477,42 @@ export default function Progress() {
             </div>
 
             {/* Personal Records */}
-            <div className="bg-[#0A0A0B] rounded-3xl p-8 border border-white/5 shadow-xl relative overflow-hidden">
-                <div className="flex items-center gap-3 mb-8">
-                    <Trophy className="text-yellow-500" size={24} />
-                    <h2 className="text-xl font-black text-white">Recordes Pessoais (PRs)</h2>
+            <div className="bg-[#0A0A0B] rounded-3xl p-8 border border-white/5 shadow-xl relative overflow-hidden text-left">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+                    <div className="flex items-center gap-3">
+                        <Trophy className="text-yellow-500" size={24} />
+                        <h2 className="text-xl font-black text-white">Recordes Pessoais (PRs)</h2>
+                    </div>
+                    {/* Muscle Group Filters */}
+                    <div className="flex flex-wrap justify-center gap-2">
+                        <button
+                            onClick={() => setSelectedMuscle('Todos')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${selectedMuscle === 'Todos' ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}
+                        >
+                            Todos
+                        </button>
+                        {Object.keys(muscleGroups).map(group => (
+                            <button
+                                key={group}
+                                onClick={() => setSelectedMuscle(group)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${selectedMuscle === group ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}
+                            >
+                                {group}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {prs.length > 0 ? (
-                        prs.map(pr => (
-                            <div key={pr.id} className="bg-white/5 rounded-2xl p-5 border border-white/5 hover:border-yellow-500/30 transition-all group">
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">{pr.exercise_name}</h3>
+                    {filteredPrs.length > 0 ? (
+                        filteredPrs.map(pr => (
+                            <button
+                                key={pr.id}
+                                onClick={() => openExerciseHistory(pr)}
+                                className="bg-white/5 rounded-2xl p-5 border border-white/5 hover:border-yellow-500/30 transition-all group text-left relative overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1 truncate">{pr.exercise_name}</h3>
                                 <div className="flex items-end gap-2">
                                     <span className="text-3xl font-black text-white group-hover:text-yellow-400 transition-colors">{pr.weight}</span>
                                     <span className="text-xs font-bold text-slate-500 mb-1.5">kg</span>
@@ -452,15 +521,65 @@ export default function Progress() {
                                     <span>{new Date(pr.date).toLocaleDateString()}</span>
                                     {pr.reps && <span>{pr.reps} reps</span>}
                                 </div>
-                            </div>
+                            </button>
                         ))
                     ) : (
                         <div className="col-span-full py-8 text-center text-slate-500">
-                            Nenhum recorde registrado ainda. Treine pesado!
+                            Nenhum recorde encontrado para este filtro.
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Exercise History Modal */}
+            {showHistoryModal && selectedExercise && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="bg-[#0A0A0B] w-full max-w-2xl rounded-[2rem] border border-white/10 p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <div className="flex justify-between items-center mb-8 relative z-10 shrink-0">
+                            <div>
+                                <h3 className="text-2xl font-black text-white">{selectedExercise.exercise_name}</h3>
+                                <p className="text-slate-500 text-sm font-medium">Evolução de carga (últimos treinos)</p>
+                            </div>
+                            <button onClick={() => setShowHistoryModal(false)} className="text-slate-500 hover:text-white p-2 hover:bg-white/5 rounded-full transition-colors"><X size={24} /></button>
+                        </div>
+
+                        <div className="relative z-10 grow overflow-y-auto">
+                            {/* Graph Area */}
+                            <div className="h-64 w-full bg-gradient-to-b from-white/[0.02] to-transparent rounded-2xl border border-white/5 p-4 relative mb-6">
+                                {exerciseHistory.length > 1 ? (
+                                    <EnhancedLineChart data={exerciseHistory} color="#facc15" onPointClick={() => { }} />
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-slate-500 text-sm flex-col gap-2 text-center px-4">
+                                        <Activity size={32} className="opacity-20" />
+                                        <p>Dados insuficientes para o gráfico.</p>
+                                        <p className="text-xs opacity-60">Realize mais treinos com este exercício para ver sua evolução.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* List of History */}
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Histórico Recente</h4>
+                            <div className="space-y-2">
+                                {exerciseHistory.length > 0 ? (
+                                    [...exerciseHistory].reverse().map((entry, i) => (
+                                        <div key={i} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <span className="text-slate-400 text-xs font-mono">{new Date(entry.date).toLocaleDateString()}</span>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xs font-bold text-slate-500">{entry.reps} reps</span>
+                                                <span className="text-white font-black">{entry.value} <span className="text-xs text-primary">kg</span></span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center text-slate-500 py-4">Carregando histórico...</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Edit/Add Weight Modal */}
             {showWeightModal && (

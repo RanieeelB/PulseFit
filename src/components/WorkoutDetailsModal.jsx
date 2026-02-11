@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PlayCircle, Clock, CheckCircle, Dumbbell } from 'lucide-react';
 import { workoutService } from '../services/workoutService';
 import { getIcon, emojiToIconMap } from '../utils/iconMap';
@@ -7,15 +7,56 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
     const [active, setActive] = useState(false);
     const [timer, setTimer] = useState(0);
     const [exercises, setExercises] = useState(workout.exercises || []);
+    const startTimeRef = useRef(null);
 
-    // Timer logic
+    // Persistence Key
+    const STORAGE_KEY = `active_workout_${workout.id}`;
+
+    // Load state from localStorage on mount
+    useEffect(() => {
+        const savedState = localStorage.getItem(STORAGE_KEY);
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                if (parsed.startTime) {
+                    startTimeRef.current = parsed.startTime;
+                    setExercises(parsed.exercises || workout.exercises || []);
+                    setActive(true);
+
+                    // Specific logic for recovering the timer immediately
+                    const elapsed = Math.floor((Date.now() - parsed.startTime) / 1000);
+                    setTimer(elapsed > 0 ? elapsed : 0);
+                }
+            } catch (e) {
+                console.error("Error parsing saved workout state", e);
+            }
+        }
+    }, [workout.id, workout.exercises]);
+
+    // Timer logic (Timestamp based)
     useEffect(() => {
         let interval;
-        if (active) {
-            interval = setInterval(() => setTimer(t => t + 1), 1000);
+        if (active && startTimeRef.current) {
+            // Update immediately
+            setTimer(Math.floor((Date.now() - startTimeRef.current) / 1000));
+
+            interval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+                setTimer(elapsed);
+            }, 1000);
         }
         return () => clearInterval(interval);
     }, [active]);
+
+    // Save state whenever exercises change (if active)
+    useEffect(() => {
+        if (active && startTimeRef.current) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                startTime: startTimeRef.current,
+                exercises: exercises
+            }));
+        }
+    }, [exercises, active, STORAGE_KEY]);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
@@ -24,19 +65,60 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
     };
 
     const handleStart = () => {
+        const now = Date.now();
+        startTimeRef.current = now;
         setActive(true);
+
+        // Save initial state
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            startTime: now,
+            exercises: exercises
+        }));
     };
 
     const handleEnd = async () => {
         if (!confirm('Finalizar treino?')) return;
 
+        // Calculate max weights for PRs
+        const exercisesPerformed = exercises.map(ex => {
+            let maxWeight = 0;
+            // Check sets for max weight
+            if (ex.sets) {
+                ex.sets.forEach(set => {
+                    const weight = parseFloat(set.weight || 0);
+                    if (weight > maxWeight) maxWeight = weight;
+                });
+            }
+            return {
+                name: ex.name,
+                weight: maxWeight,
+                reps: 0 // We could calculate max reps too if needed
+            };
+        });
+
+        // Clear local storage for this workout
+        localStorage.removeItem(STORAGE_KEY);
         setActive(false);
+
         const durationMin = Math.ceil(timer / 60);
         // Estimate: 6 kcal per minute (moderate intensity weight lifting)
         const calories = durationMin * 6;
 
-        await workoutService.toggleStatus(workout.id, durationMin, calories);
+        await workoutService.toggleStatus(workout.id, durationMin, calories, exercisesPerformed);
         onClose();
+    };
+
+    // Controlled Inputs Handler
+    const handleSetChange = (exerciseIndex, setIndex, field, value) => {
+        if (!active) return; // Prevent editing if not active
+
+        const newExercises = [...exercises];
+        const newSets = [...newExercises[exerciseIndex].sets];
+
+        newSets[setIndex] = { ...newSets[setIndex], [field]: value };
+        newExercises[exerciseIndex] = { ...newExercises[exerciseIndex], sets: newSets };
+
+        setExercises(newExercises);
     };
 
     return (
@@ -103,6 +185,8 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
                                             <input
                                                 type="number"
                                                 placeholder="-"
+                                                value={set.weight || ''}
+                                                onChange={(e) => handleSetChange(i, j, 'weight', e.target.value)}
                                                 disabled={!active}
                                                 className="text-center bg-black/30 border border-white/10 rounded-md py-1 text-[10px] text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all font-mono p-0 w-full"
                                             />
@@ -111,7 +195,13 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
                                             </div>
                                             <div className="col-span-2 flex justify-center">
                                                 <label className="cursor-pointer relative flex items-center justify-center w-full">
-                                                    <input type="checkbox" disabled={!active} className="peer sr-only" />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={set.completed || false}
+                                                        onChange={(e) => handleSetChange(i, j, 'completed', e.target.checked)}
+                                                        disabled={!active}
+                                                        className="peer sr-only"
+                                                    />
                                                     <div className="w-6 h-6 bg-white/5 border border-white/10 rounded-md flex items-center justify-center text-transparent peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all">
                                                         <CheckCircle size={14} fill="currentColor" className="opacity-0 peer-checked:opacity-100 transition-opacity" />
                                                     </div>

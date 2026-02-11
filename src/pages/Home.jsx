@@ -54,7 +54,7 @@ export default function Home() {
         <div className="max-w-3xl mx-auto pb-24 md:pb-8 space-y-6 md:space-y-12 px-4 py-4 md:py-8 w-full">
 
             {/* Header */}
-            <div className="flex flex-col items-center justify-center text-center gap-6 py-8 relative overflow-hidden w-full">
+            <div className="flex flex-col items-center justify-center text-center gap-6 py-8 relative w-full">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-primary/20 blur-[100px] rounded-full pointer-events-none"></div>
                 <div className="space-y-2 relative z-10">
                     <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">

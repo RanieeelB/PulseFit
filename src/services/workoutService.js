@@ -112,7 +112,7 @@ export const workoutService = {
         window.dispatchEvent(new CustomEvent('stats-updated'));
     },
 
-    async toggleStatus(id, actualDuration = null, actualCalories = null) {
+    async toggleStatus(id, actualDuration = null, actualCalories = null, exercisesPerformed = []) {
         const { data: workout } = await supabase
             .from('workouts')
             .select('*')
@@ -130,6 +130,12 @@ export const workoutService = {
             const duration = actualDuration || parseInt(workout.duration) || 45;
             const kcal = actualCalories || (duration * 6);
             await this.addLog(id, duration, kcal);
+
+            // Update Personal Records if pending -> completed
+            if (exercisesPerformed && exercisesPerformed.length > 0) {
+                await this.updatePRs(exercisesPerformed);
+                await this.saveExerciseHistory(exercisesPerformed);
+            }
         }
 
         const { error } = await supabase
@@ -373,5 +379,47 @@ export const workoutService = {
                 if (error) console.error('Error updating PR for', ex.name, error);
             }
         }
+    },
+
+
+    async saveExerciseHistory(exercises) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !exercises || exercises.length === 0) return;
+
+        const historyEntries = exercises.map(ex => ({
+            user_id: user.id,
+            exercise_name: ex.name,
+            weight: parseFloat(ex.weight),
+            reps: ex.reps || 0,
+            sets: ex.sets || 0,
+            date: new Date().toISOString()
+        })).filter(entry => entry.weight > 0); // Only save if weight > 0
+
+        if (historyEntries.length === 0) return;
+
+        const { error } = await supabase
+            .from('exercise_history')
+            .insert(historyEntries);
+
+        if (error) console.error('Error saving exercise history:', error);
+    },
+
+    async getExerciseHistory(exerciseName) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('exercise_history')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('exercise_name', exerciseName)
+            .order('date', { ascending: true })
+            .limit(20); // Last 20 sessions
+
+        if (error) {
+            console.error('Error fetching history:', error);
+            return [];
+        }
+        return data;
     }
 };
