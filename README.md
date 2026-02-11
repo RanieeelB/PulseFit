@@ -48,36 +48,7 @@ O PulseFit foi construído com as tecnologias mais modernas do mercado para gara
 
 ---
 
-## 📦 Instalação e Uso
 
-Para rodar o PulseFit localmente em sua máquina:
-
-1.  **Clone o repositório:**
-    ```bash
-    git clone https://github.com/seu-usuario/pulsefit.git
-    cd pulsefit
-    ```
-
-2.  **Instale as dependências:**
-    ```bash
-    npm install
-    ```
-
-3.  **Configure o ambiente:**
-    Crie um arquivo `.env` na raiz do projeto com suas chaves do Supabase:
-    ```env
-    VITE_SUPABASE_URL=sua_url_do_supabase
-    VITE_SUPABASE_ANON_KEY=sua_chave_anonima
-    ```
-
-4.  **Inicie o servidor de desenvolvimento:**
-    ```bash
-    npm run dev
-    ```
-
-5.  **Acesse:** Abra `http://localhost:5173` no seu navegador.
-
----
 
 ## 🤝 Contribuição
 
@@ -91,4 +62,4 @@ O PulseFit é um projeto em constante evolução. Sugestões e Pull Requests sã
 
 ---
 
-**Desenvolvido com 💜 por Ranielly & DeepMind**
+**Desenvolvido por Raniel**
