@@ -3,7 +3,7 @@ import { userService } from '../services/userService';
 
 export default function ProfileModal() {
     const dialogRef = useRef(null);
-    const [user, setUser] = useState({ name: '', avatar: '', weight: 0, height: 0 });
+    const [user, setUser] = useState({ name: '', email: '', avatar: '', weight: 0, height: 0 });
     const [loading, setLoading] = useState(false);
 
     const [uploading, setUploading] = useState(false);
@@ -111,6 +111,16 @@ export default function ProfileModal() {
                                 value={user.name}
                                 onChange={(e) => setUser({ ...user, name: e.target.value })}
                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-slate-600"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Email</label>
+                            <input
+                                type="email"
+                                value={user.email || ''}
+                                disabled
+                                className="w-full bg-white/5 border border-white/5 rounded-xl px-3 py-2 text-sm text-slate-400 cursor-not-allowed font-mono"
                             />
                         </div>
 

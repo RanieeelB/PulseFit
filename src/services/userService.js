@@ -23,9 +23,12 @@ export const userService = {
         if (error && error.code === 'PGRST116') {
             // Profile does not exist, create it
             // Exclude 'notifications' from insert payload to be safe if column is missing
-            // The DB default (if column exists) or code default will handle it
             const { notifications, ...profileData } = defaultProfile;
-            const newProfile = { id: user.id, ...profileData };
+            const newProfile = {
+                id: user.id,
+                email: user.email, // Add email definition
+                ...profileData
+            };
 
             const { data, error: insertError } = await supabase
                 .from('profiles')
@@ -45,6 +48,12 @@ export const userService = {
         } else if (error) {
             console.error('Error fetching profile:', error);
             return defaultProfile;
+        }
+
+        // Sync email if missing in profile but present in auth
+        if (user.email && profile && !profile.email) {
+            await this.saveProfile({ email: user.email });
+            profile.email = user.email;
         }
 
         return profile;
