@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+    --color-primary: #5b13ec;
+    --color-primary-hover: #4a0bc4;
+    --color-background-light: #f6f6f8;
+    --color-background-dark: #0f0f12;
+    --color-surface-dark: #18181b;
+    --color-surface-hover: #222226;
+
+    --font-display: "Manrope", "sans-serif";
+}
+
+@layer base {
+    body {
+        @apply font-display antialiased bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #18181b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2f2f35;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46;
+}
+
+@keyframes slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-up {
+    animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
