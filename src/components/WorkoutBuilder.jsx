@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { Plus, Search, Trash2, Save, Dumbbell } from 'lucide-react';
+import { iconMap, getIcon } from '../utils/iconMap';
 
 export default function WorkoutBuilder({ onSave, onCancel }) {
     const [step, setStep] = useState(1); // 1: Details, 2: Add Exercises
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [icon, setIcon] = useState('💪');
+    const [icon, setIcon] = useState('dumbbell');
 
     const [catalog, setCatalog] = useState([]);
     const [selectedExercises, setSelectedExercises] = useState([]);
@@ -100,8 +101,8 @@ export default function WorkoutBuilder({ onSave, onCancel }) {
         return (
             <div className="space-y-6">
                 <div className="text-center">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl animate-bounce-slow">
-                        {icon}
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl animate-bounce-slow text-primary">
+                        {getIcon(icon, { size: 32 })}
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">Criar Novo Treino</h3>
                     <p className="text-sm text-slate-500">Defina o nome e o ícone do seu treino</p>
@@ -129,13 +130,13 @@ export default function WorkoutBuilder({ onSave, onCancel }) {
                     <div>
                         <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Ícone</label>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                            {['💪', '🦵', '🔥', '🧘', '🏃', '🏋️', '🤸', '🚴', '🏊', '🥊'].map(i => (
+                            {Object.keys(iconMap).map(key => (
                                 <button
-                                    key={i}
-                                    onClick={() => setIcon(i)}
-                                    className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl text-2xl border transition-all ${icon === i ? 'bg-primary/20 border-primary shadow-lg scale-110' : 'bg-slate-50 dark:bg-white/5 border-transparent hover:bg-slate-100 dark:hover:bg-white/10'}`}
+                                    key={key}
+                                    onClick={() => setIcon(key)}
+                                    className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl text-2xl border transition-all ${icon === key ? 'bg-primary/20 border-primary shadow-lg scale-110 text-primary' : 'bg-slate-50 dark:bg-white/5 border-transparent hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 hover:text-white'}`}
                                 >
-                                    {i}
+                                    {getIcon(key, { size: 24 })}
                                 </button>
                             ))}
                         </div>

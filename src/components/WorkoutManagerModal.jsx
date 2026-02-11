@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { workoutService } from '../services/workoutService';
 import WorkoutBuilder from './WorkoutBuilder';
 import { Dumbbell, Trash2 } from 'lucide-react';
+import { getIcon, emojiToIconMap } from '../utils/iconMap';
 
 export default function WorkoutManagerModal() {
     const dialogRef = useRef(null);
@@ -103,7 +104,7 @@ export default function WorkoutManagerModal() {
                                         <div key={w.id} className="flex items-center justify-between p-3.5 bg-white/[0.03] rounded-xl border border-white/5 hover:border-primary/50 hover:bg-white/[0.05] transition-all group">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-black/40 rounded-xl flex items-center justify-center text-2xl shadow-inner border border-white/5 group-hover:scale-110 transition-transform">
-                                                    {w.icon || '🏋️'}
+                                                    {getIcon(emojiToIconMap[w.icon] || w.icon, { size: 24, className: "text-white" })}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold text-base text-white group-hover:text-primary transition-colors">{w.title}</h4>

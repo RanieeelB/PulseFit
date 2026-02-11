@@ -3,6 +3,7 @@ import WorkoutDetailsModal from '../components/WorkoutDetailsModal';
 import { workoutService } from '../services/workoutService';
 import { getRandomTip } from '../utils/tips';
 import { Plus, CheckCircle, PlayCircle, Clock, Moon, Flame, Zap, Activity, TrendingUp, Calendar } from 'lucide-react';
+import { getIcon, emojiToIconMap } from '../utils/iconMap';
 
 export default function Home() {
     const [workouts, setWorkouts] = useState([]);
@@ -284,7 +285,9 @@ function WorkoutCard({ workout, index, onClick }) {
                 <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 transition-all duration-300 shadow-inner border border-white/5 
                     ${isCompleted ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' : `${theme.iconBg} ${theme.iconBorder}`}
                 `}>
-                    <span className={`material-icons-round ${isNext ? 'animate-bounce-slow' : ''}`}>{workout.icon}</span>
+                    <span className={`${isNext ? 'animate-bounce-slow' : ''}`}>
+                        {getIcon(emojiToIconMap[workout.icon] || workout.icon, { size: 28 })}
+                    </span>
                 </div>
 
                 {/* Text Content */}

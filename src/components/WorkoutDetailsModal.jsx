@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PlayCircle, Clock, CheckCircle, Dumbbell } from 'lucide-react';
 import { workoutService } from '../services/workoutService';
+import { getIcon, emojiToIconMap } from '../utils/iconMap';
 
 export default function WorkoutDetailsModal({ workout, onClose }) {
     const [active, setActive] = useState(false);
@@ -50,7 +51,7 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/[0.02] relative z-10 backdrop-blur-sm shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center text-xl shadow-lg shadow-primary/20">
-                            {workout.icon}
+                            {getIcon(emojiToIconMap[workout.icon] || workout.icon, { size: 20, className: "text-white" })}
                         </div>
                         <div>
                             <h2 className="text-base font-black text-white uppercase tracking-wider line-clamp-1">
