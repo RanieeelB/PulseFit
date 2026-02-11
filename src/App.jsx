@@ -38,9 +38,9 @@ function App() {
 
     return (
         <Router>
-            <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-display flex flex-col">
+            <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-display flex flex-col overflow-x-hidden relative">
                 <Navbar />
-                <main className="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                <main className="flex-grow w-full">
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/index.html" element={<Home />} /> {/* Redirect/Alias */}

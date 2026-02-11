@@ -143,7 +143,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Gradients */}
-            <div className="fixed top-[80px] left-0 right-0 h-16 bg-gradient-to-b from-black/80 via-black/20 to-transparent pointer-events-none md:hidden z-40"></div>
+            <div className="absolute top-[80px] left-0 right-0 h-16 bg-gradient-to-b from-black/80 via-black/20 to-transparent pointer-events-none md:hidden z-40"></div>
             <div className="fixed bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none md:hidden z-40"></div>
         </>
     );

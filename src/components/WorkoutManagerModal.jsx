@@ -54,24 +54,24 @@ export default function WorkoutManagerModal() {
     };
 
     return (
-        <dialog ref={dialogRef} className="m-auto bg-transparent p-0 backdrop:bg-black/80 backdrop-blur-xl open:animate-in open:fade-in open:zoom-in-95 backdrop:animate-in backdrop:fade-in w-[80%] max-w-2xl h-[85vh] rounded-3xl overflow-hidden shadow-2xl shadow-primary/20 ring-1 ring-white/10">
+        <dialog ref={dialogRef} className="m-auto bg-transparent p-0 backdrop:bg-black/80 backdrop-blur-xl open:animate-in open:fade-in open:zoom-in-95 backdrop:animate-in backdrop:fade-in w-[95%] md:w-[80%] max-w-2xl h-[85vh] rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl shadow-primary/20 ring-1 ring-white/10">
             <div className="bg-[#0A0A0B] border border-white/10 w-full h-full flex flex-col relative overflow-hidden text-slate-200">
                 {/* Background ambient glow */}
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[100px] rounded-full pointer-events-none"></div>
 
-                <div className="px-5 py-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02] shrink-0 relative z-10">
+                <div className="px-4 py-3 md:px-5 md:py-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02] shrink-0 relative z-10">
                     <div className="flex items-center gap-2.5">
                         <div className="p-1.5 bg-gradient-to-br from-primary to-purple-600 rounded-lg shadow-lg shadow-primary/20">
                             <Dumbbell className="text-white" size={18} />
                         </div>
-                        <h3 className="text-lg font-black text-white uppercase tracking-wide">Gerenciador</h3>
+                        <h3 className="text-base md:text-lg font-black text-white uppercase tracking-wide">Gerenciador</h3>
                     </div>
                     <button onClick={() => dialogRef.current?.close()} className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-all">
                         <span className="material-icons-round text-lg">close</span>
                     </button>
                 </div>
 
-                <div className="p-5 flex-1 overflow-hidden flex flex-col relative z-10">
+                <div className="p-3 md:p-5 flex-1 overflow-hidden flex flex-col relative z-10">
                     {view === 'list' ? (
                         <div className="h-full flex flex-col max-w-4xl mx-auto w-full">
                             <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 p-5 rounded-2xl border border-primary/20 text-center mb-5 relative overflow-hidden group shrink-0">

@@ -50,10 +50,10 @@ export default function Home() {
     if (loading) return <div className="text-center py-20 text-slate-500">Carregando dashboard...</div>;
 
     return (
-        <div className="max-w-3xl mx-auto pb-24 md:pb-8 space-y-12">
+        <div className="max-w-3xl mx-auto pb-24 md:pb-8 space-y-6 md:space-y-12 px-4 py-4 md:py-8 w-full">
 
             {/* Header */}
-            <div className="flex flex-col items-center justify-center text-center gap-6 py-8 relative">
+            <div className="flex flex-col items-center justify-center text-center gap-6 py-8 relative overflow-hidden w-full">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-primary/20 blur-[100px] rounded-full pointer-events-none"></div>
                 <div className="space-y-2 relative z-10">
                     <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-slate-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
@@ -79,7 +79,7 @@ export default function Home() {
             </div>
 
             {/* Stats Overview */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
                 <StatCard value={stats.workouts} label="Treinos/Semana" icon={<Activity size={16} />} delay={0} />
                 <StatCard value={stats.minutes} label="Min Totais" icon={<Clock size={16} />} delay={100} />
                 <StatCard value={stats.calories} label="Kcal Queimadas" color="text-orange-400" icon={<Flame size={16} />} delay={200} />
@@ -104,7 +104,7 @@ export default function Home() {
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-4 w-full">
                     {workouts.length > 0 ? (
                         workouts.map((workout, index) => (
                             <WorkoutCard
@@ -252,7 +252,7 @@ function WorkoutCard({ workout, index, onClick }) {
     return (
         <div
             onClick={onClick}
-            className={`group relative rounded-3xl p-6 border cursor-pointer transition-all duration-300 transform hover:-translate-y-1 overflow-hidden 
+            className={`group relative rounded-3xl p-4 md:p-6 border cursor-pointer transition-all duration-300 transform hover:-translate-y-1 overflow-hidden 
                 ${isCompleted ? 'bg-emerald-950/10 border-emerald-500/30' : 'bg-[#121214]'}
                 ${isNext ? `ring-1 ring-${theme.name}-500/50 scale-[1.02] shadow-[0_0_30px_rgba(0,0,0,0.3)]` : 'hover:shadow-xl'}
                 ${!isCompleted ? `${theme.border} ${theme.borderHover}` : 'hover:border-emerald-500/50'}
@@ -279,9 +279,9 @@ function WorkoutCard({ workout, index, onClick }) {
                 </div>
             )}
 
-            <div className="flex items-center gap-5 mb-6 relative z-10">
+            <div className="flex items-center gap-4 md:gap-5 mb-6 relative z-10">
                 {/* Icon Container */}
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 transition-all duration-300 shadow-inner border border-white/5 
+                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 transition-all duration-300 shadow-inner border border-white/5 
                     ${isCompleted ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' : `${theme.iconBg} ${theme.iconBorder}`}
                 `}>
                     <span className={`material-icons-round ${isNext ? 'animate-bounce-slow' : ''}`}>{workout.icon}</span>
@@ -289,7 +289,7 @@ function WorkoutCard({ workout, index, onClick }) {
 
                 {/* Text Content */}
                 <div>
-                    <h3 className={`text-xl font-black text-white transition-colors uppercase tracking-wide drop-shadow-md ${!isCompleted ? theme.text : 'group-hover:text-emerald-400'}`}>
+                    <h3 className={`text-lg md:text-xl font-black text-white transition-colors uppercase tracking-wide drop-shadow-md ${!isCompleted ? theme.text : 'group-hover:text-emerald-400'}`}>
                         {workout.title}
                     </h3>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1 group-hover:text-slate-400 transition-colors">

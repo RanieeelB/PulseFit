@@ -286,7 +286,7 @@ export default function Progress() {
     if (loading) return <div className="text-center py-20 text-slate-500">Carregando progresso...</div>;
 
     return (
-        <div className="max-w-5xl mx-auto pb-24 space-y-8">
+        <div className="max-w-5xl mx-auto pb-24 space-y-8 px-4 w-full">
             {/* Header / Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 

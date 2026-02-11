@@ -64,8 +64,8 @@ export default function ProfileModal() {
                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/30 blur-[60px] rounded-full pointer-events-none"></div>
                 <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 blur-[60px] rounded-full pointer-events-none"></div>
 
-                <div className="px-5 py-4 border-b border-white/5 flex justify-between items-center bg-white/5 relative z-10">
-                    <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center bg-white/5 relative z-10">
+                    <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
                         <span className="w-1 h-5 bg-gradient-to-b from-primary to-purple-500 rounded-full"></span>
                         Editar Perfil
                     </h3>
@@ -74,7 +74,7 @@ export default function ProfileModal() {
                     </button>
                 </div>
 
-                <div className="p-5 relative z-10">
+                <div className="p-4 relative z-10">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex justify-center mb-4">
                             <label className="relative group cursor-pointer">
