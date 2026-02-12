@@ -9,6 +9,7 @@ export default function WorkoutManagerModal() {
     const [workouts, setWorkouts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [view, setView] = useState('list'); // 'list' | 'create'
+    const [editingWorkout, setEditingWorkout] = useState(null);
 
     const loadWorkouts = async () => {
         setLoading(true);
@@ -36,13 +37,18 @@ export default function WorkoutManagerModal() {
 
     const handleSaveWorkout = async (workoutData) => {
         try {
-            await workoutService.createWorkout(workoutData);
+            if (editingWorkout) {
+                await workoutService.updateWorkout(editingWorkout.id, workoutData);
+            } else {
+                await workoutService.createWorkout(workoutData);
+            }
             await loadWorkouts();
             setView('list');
+            setEditingWorkout(null);
             window.dispatchEvent(new CustomEvent('workout-updated'));
         } catch (error) {
             console.error(error);
-            alert('Erro ao criar treino');
+            alert('Erro ao salvar treino');
         }
     };
 
@@ -79,7 +85,7 @@ export default function WorkoutManagerModal() {
                                 <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                                 <h4 className="font-bold text-white text-xl mb-1 relative z-10">Criar Novo Plano</h4>
                                 <p className="text-slate-400 mb-4 text-sm max-w-lg mx-auto relative z-10">Personalize sua rotina com nossa biblioteca.</p>
-                                <button onClick={() => setView('create')} className="relative z-10 bg-white text-black hover:bg-slate-200 rounded-xl px-6 py-3 font-black tracking-wide shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm">
+                                <button onClick={() => { setEditingWorkout(null); setView('create'); }} className="relative z-10 bg-white text-black hover:bg-slate-200 rounded-xl px-6 py-3 font-black tracking-wide shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm">
                                     + MONTAR TREINO
                                 </button>
                             </div>
@@ -102,7 +108,7 @@ export default function WorkoutManagerModal() {
                                 ) : (
                                     workouts.map(w => (
                                         <div key={w.id} className="flex items-center justify-between p-3.5 bg-white/[0.03] rounded-xl border border-white/5 hover:border-primary/50 hover:bg-white/[0.05] transition-all group">
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setEditingWorkout(w); setView('create'); }}>
                                                 <div className="w-12 h-12 bg-black/40 rounded-xl flex items-center justify-center text-2xl shadow-inner border border-white/5 group-hover:scale-110 transition-transform">
                                                     {getIcon(emojiToIconMap[w.icon] || w.icon, { size: 24, className: "text-white" })}
                                                 </div>
@@ -115,7 +121,10 @@ export default function WorkoutManagerModal() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2 opacity-100 md:opacity-60 md:group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleDelete(w.id)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all border border-transparent hover:border-red-400/20" title="Excluir">
+                                                <button onClick={(e) => { e.stopPropagation(); setEditingWorkout(w); setView('create'); }} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all border border-transparent hover:border-primary/20" title="Editar">
+                                                    <span className="material-icons-round text-lg">edit</span>
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDelete(w.id); }} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all border border-transparent hover:border-red-400/20" title="Excluir">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
@@ -125,7 +134,11 @@ export default function WorkoutManagerModal() {
                             </div>
                         </div>
                     ) : (
-                        <WorkoutBuilder onSave={handleSaveWorkout} onCancel={() => setView('list')} />
+                        <WorkoutBuilder
+                            onSave={handleSaveWorkout}
+                            onCancel={() => { setView('list'); setEditingWorkout(null); }}
+                            initialData={editingWorkout}
+                        />
                     )}
                 </div>
             </div>

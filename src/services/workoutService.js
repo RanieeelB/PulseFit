@@ -47,6 +47,35 @@ export const workoutService = {
         return data;
     },
 
+    async updateWorkout(id, workoutData) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+
+        const durationMin = (workoutData.exercises || []).length * 10;
+        const newDuration = `${durationMin}m`;
+
+        const updates = {
+            title: workoutData.title,
+            description: workoutData.description,
+            icon: workoutData.icon,
+            exercises: workoutData.exercises || [],
+            duration: newDuration
+        };
+
+        const { data, error } = await supabase
+            .from('workouts')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating workout:', error);
+            throw error;
+        }
+        return data;
+    },
+
     async deleteWorkout(id) {
         // First delete logs
         const { error: logError } = await supabase
@@ -112,40 +141,68 @@ export const workoutService = {
         window.dispatchEvent(new CustomEvent('stats-updated'));
     },
 
-    async toggleStatus(id, actualDuration = null, actualCalories = null, exercisesPerformed = []) {
-        const { data: workout } = await supabase
-            .from('workouts')
-            .select('*')
-            .eq('id', id)
-            .single();
+    async finishWorkout(id, duration, calories, exercisesPerformed) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
 
-        if (!workout) return;
+        // 1. Log the workout
+        await this.addLog(id, duration, calories);
 
-        let newStatus = workout.status;
-        if (workout.status === 'completed') {
-            newStatus = 'pending';
-        } else {
-            newStatus = 'completed';
-            // Log it
-            const duration = actualDuration || parseInt(workout.duration) || 45;
-            const kcal = actualCalories || (duration * 6);
-            await this.addLog(id, duration, kcal);
+        // 2. Update status
+        await supabase.from('workouts').update({ status: 'completed' }).eq('id', id);
 
-            // Update Personal Records if pending -> completed
-            if (exercisesPerformed && exercisesPerformed.length > 0) {
-                await this.updatePRs(exercisesPerformed);
-                await this.saveExerciseHistory(exercisesPerformed);
-            }
+        // 3. Process Exercises for PRs and History
+        const summary = {
+            duration,
+            calories,
+            prs: [],
+            improvements: []
+        };
+
+        if (exercisesPerformed && exercisesPerformed.length > 0) {
+            // Update PRs and get list of new records
+            const newPRs = await this.updatePRs(exercisesPerformed);
+            summary.prs = newPRs || [];
+
+            // Save history
+            await this.saveExerciseHistory(exercisesPerformed);
+
+            // Calculate Improvements (compare with last session)
+            const historyPromises = exercisesPerformed.map(async (ex) => {
+                const history = await this.getExerciseHistory(ex.name);
+                // History is sorted by date DESC (newest first)
+                // So index 0 is Current (just saved), index 1 is Previous
+
+                if (history && history.length >= 2) {
+                    const current = history[0];
+                    const previous = history[1];
+
+                    if (current.weight > previous.weight) {
+                        return {
+                            name: ex.name,
+                            oldWeight: previous.weight,
+                            newWeight: current.weight,
+                            diff: current.weight - previous.weight
+                        };
+                    }
+                }
+                return null;
+            });
+
+            const results = await Promise.all(historyPromises);
+            summary.improvements = results.filter(r => r !== null);
         }
 
-        const { error } = await supabase
-            .from('workouts')
-            .update({ status: newStatus })
-            .eq('id', id);
+        return summary;
+    },
 
-        if (error) console.error('Error toggling status:', error);
+    async toggleStatus(id) {
+        // Legacy toggle, mostly for un-completing or simple toggle without stats
+        const { data: workout } = await supabase.from('workouts').select('status').eq('id', id).single();
+        if (!workout) return;
 
-        // Return fresh list for UI update
+        const newStatus = workout.status === 'completed' ? 'pending' : 'completed';
+        await supabase.from('workouts').update({ status: newStatus }).eq('id', id);
         return this.getAll();
     },
 
@@ -346,7 +403,9 @@ export const workoutService = {
 
     async updatePRs(exercises) {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user || !exercises || exercises.length === 0) return;
+        if (!user || !exercises || exercises.length === 0) return [];
+
+        const newRecords = [];
 
         // Fetch current records
         const { data: currentPRs } = await supabase
@@ -357,8 +416,6 @@ export const workoutService = {
         const currentMap = new Map(currentPRs?.map(pr => [pr.exercise_name, pr]) || []);
 
         for (const ex of exercises) {
-            // We expect exercises to have 'name' and 'weight' (max weight used in session)
-            // ex: { name: 'Bench Press', weight: 100, reps: 5 }
             if (!ex.name || !ex.weight) continue;
 
             const existingPR = currentMap.get(ex.name);
@@ -373,12 +430,19 @@ export const workoutService = {
                         exercise_name: ex.name,
                         weight: newWeight,
                         reps: ex.reps || 0,
-                        date: new Date().toISOString() // Update date to today
+                        date: new Date().toISOString()
                     }, { onConflict: 'user_id, exercise_name' });
 
-                if (error) console.error('Error updating PR for', ex.name, error);
+                if (!error) {
+                    newRecords.push({
+                        name: ex.name,
+                        oldWeight: existingPR ? existingPR.weight : 0,
+                        newWeight: newWeight
+                    });
+                }
             }
         }
+        return newRecords;
     },
 
 
@@ -413,7 +477,7 @@ export const workoutService = {
             .select('*')
             .eq('user_id', user.id)
             .eq('exercise_name', exerciseName)
-            .order('date', { ascending: true })
+            .order('date', { ascending: false })
             .limit(20); // Last 20 sessions
 
         if (error) {

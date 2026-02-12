@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PlayCircle, Clock, CheckCircle, Dumbbell } from 'lucide-react';
 import { workoutService } from '../services/workoutService';
 import { getIcon, emojiToIconMap } from '../utils/iconMap';
+import WorkoutSummaryModal from './WorkoutSummaryModal';
 
 export default function WorkoutDetailsModal({ workout, onClose }) {
     const [active, setActive] = useState(false);
@@ -76,6 +77,8 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
         }));
     };
 
+    const [summaryData, setSummaryData] = useState(null);
+
     const handleEnd = async () => {
         if (!confirm('Finalizar treino?')) return;
 
@@ -104,8 +107,25 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
         // Estimate: 6 kcal per minute (moderate intensity weight lifting)
         const calories = durationMin * 6;
 
-        await workoutService.toggleStatus(workout.id, durationMin, calories, exercisesPerformed);
-        onClose();
+        // Optimistic UI: Show summary immediately
+        setSummaryData({
+            duration: durationMin,
+            calories: calories,
+            prs: [],
+            improvements: [],
+            isLoading: true
+        });
+
+        // Process in background
+        workoutService.finishWorkout(workout.id, durationMin, calories, exercisesPerformed)
+            .then(summary => {
+                setSummaryData(prev => ({ ...summary, isLoading: false }));
+            })
+            .catch(err => {
+                console.error("Error finishing workout:", err);
+                // Keep the basic summary but remove loading state
+                setSummaryData(prev => ({ ...prev, isLoading: false }));
+            });
     };
 
     // Controlled Inputs Handler
@@ -120,6 +140,10 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
 
         setExercises(newExercises);
     };
+
+    if (summaryData) {
+        return <WorkoutSummaryModal summary={summaryData} onClose={onClose} workoutTitle={workout.title} />;
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in">
@@ -153,62 +177,82 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
                 </div>
 
                 {/* Exercises List */}
-                <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar relative z-10">
+                <div className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar relative z-10">
                     {exercises.length === 0 ? (
                         <div className="text-center py-8 border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
                             <p className="text-slate-500 text-xs">Este treino não tem exercícios detalhados.</p>
                         </div>
                     ) : (
-                        exercises.map((ex, i) => (
-                            <div key={i} className="bg-[#121214] rounded-xl p-3 border border-white/5 hover:border-primary/30 transition-colors group relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-100 transition-opacity">
-                                    <Dumbbell className="text-white" size={24} />
-                                </div>
-
-                                <h3 className="font-bold text-white text-sm mb-2.5 flex items-center gap-2">
-                                    <span className="w-1 h-3 bg-primary rounded-full"></span>
-                                    {ex.name}
+                        Object.entries(
+                            exercises.reduce((acc, ex, i) => {
+                                const group = ex.muscle_group || 'Outros';
+                                if (!acc[group]) acc[group] = [];
+                                acc[group].push({ ...ex, originalIndex: i });
+                                return acc;
+                            }, {})
+                        ).map(([group, groupExercises]) => (
+                            <div key={group} className="space-y-2">
+                                <h3 className="text-xs font-black text-primary uppercase tracking-widest pl-1 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                                    {group}
+                                    <span className="text-[10px] text-slate-500 font-bold ml-auto">{groupExercises.length} EXERCÍCIOS</span>
                                 </h3>
+                                <div className="space-y-3">
+                                    {groupExercises.map((ex) => {
+                                        const i = ex.originalIndex;
+                                        return (
+                                            <div key={i} className="bg-[#121214] rounded-xl p-3 border border-white/5 hover:border-primary/30 transition-colors group relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-100 transition-opacity">
+                                                    <Dumbbell className="text-white" size={24} />
+                                                </div>
 
-                                <div className="space-y-1.5">
-                                    <div className="grid grid-cols-5 gap-1 text-[8px] font-black text-slate-500 uppercase text-center tracking-wider">
-                                        <span>Set</span>
-                                        <span>Kg</span>
-                                        <span>Reps</span>
-                                        <span className="col-span-2">Status</span>
-                                    </div>
-                                    {ex.sets?.map((set, j) => (
-                                        <div key={j} className="grid grid-cols-5 gap-1 items-center">
-                                            <div className="text-center font-bold text-slate-400 bg-white/5 py-1 rounded-md border border-white/5 text-[10px]">
-                                                {j + 1}
-                                            </div>
-                                            <input
-                                                type="number"
-                                                placeholder="-"
-                                                value={set.weight || ''}
-                                                onChange={(e) => handleSetChange(i, j, 'weight', e.target.value)}
-                                                disabled={!active}
-                                                className="text-center bg-black/30 border border-white/10 rounded-md py-1 text-[10px] text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all font-mono p-0 w-full"
-                                            />
-                                            <div className="text-center bg-white/5 py-1 rounded-md border border-white/5 text-[10px] text-slate-300 font-mono truncate px-0.5">
-                                                {set.reps}
-                                            </div>
-                                            <div className="col-span-2 flex justify-center">
-                                                <label className="cursor-pointer relative flex items-center justify-center w-full">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={set.completed || false}
-                                                        onChange={(e) => handleSetChange(i, j, 'completed', e.target.checked)}
-                                                        disabled={!active}
-                                                        className="peer sr-only"
-                                                    />
-                                                    <div className="w-6 h-6 bg-white/5 border border-white/10 rounded-md flex items-center justify-center text-transparent peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all">
-                                                        <CheckCircle size={14} fill="currentColor" className="opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                                <h3 className="font-bold text-white text-sm mb-2.5 flex items-center gap-2">
+                                                    {ex.name}
+                                                </h3>
+
+                                                <div className="space-y-1.5">
+                                                    <div className="grid grid-cols-5 gap-1 text-[8px] font-black text-slate-500 uppercase text-center tracking-wider">
+                                                        <span>Set</span>
+                                                        <span>Kg</span>
+                                                        <span>Reps</span>
+                                                        <span className="col-span-2">Status</span>
                                                     </div>
-                                                </label>
+                                                    {ex.sets?.map((set, j) => (
+                                                        <div key={j} className="grid grid-cols-5 gap-1 items-center">
+                                                            <div className="text-center font-bold text-slate-400 bg-white/5 py-1 rounded-md border border-white/5 text-[10px]">
+                                                                {j + 1}
+                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="-"
+                                                                value={set.weight || ''}
+                                                                onChange={(e) => handleSetChange(i, j, 'weight', e.target.value)}
+                                                                disabled={!active}
+                                                                className="text-center bg-black/30 border border-white/10 rounded-md py-1 text-[10px] text-white focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all font-mono p-0 w-full"
+                                                            />
+                                                            <div className="text-center bg-white/5 py-1 rounded-md border border-white/5 text-[10px] text-slate-300 font-mono truncate px-0.5">
+                                                                {set.reps}
+                                                            </div>
+                                                            <div className="col-span-2 flex justify-center">
+                                                                <label className="cursor-pointer relative flex items-center justify-center w-full">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={set.completed || false}
+                                                                        onChange={(e) => handleSetChange(i, j, 'completed', e.target.checked)}
+                                                                        disabled={!active}
+                                                                        className="peer sr-only"
+                                                                    />
+                                                                    <div className="w-6 h-6 bg-white/5 border border-white/10 rounded-md flex items-center justify-center text-transparent peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all">
+                                                                        <CheckCircle size={14} fill="currentColor" className="opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                                                    </div>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ))

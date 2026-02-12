@@ -3,7 +3,7 @@ import { supabase } from '../services/supabaseClient';
 import { Plus, Search, Trash2, Save, Dumbbell } from 'lucide-react';
 import { iconMap, getIcon } from '../utils/iconMap';
 
-export default function WorkoutBuilder({ onSave, onCancel }) {
+export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
     const [step, setStep] = useState(1); // 1: Details, 2: Add Exercises
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -17,9 +17,66 @@ export default function WorkoutBuilder({ onSave, onCancel }) {
     // Mobile Tab State
     const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'workout'
 
+    // Drag and Drop & Sort Handlers
+    const [draggedItem, setDraggedItem] = useState(null);
+
+    const handleDragStart = (e, index) => {
+        setDraggedItem(index);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e, index) => {
+        e.preventDefault();
+    };
+
+    const handleDrop = (e, index) => {
+        e.preventDefault();
+        const newExercises = [...selectedExercises];
+        const item = newExercises[draggedItem];
+        newExercises.splice(draggedItem, 1);
+        newExercises.splice(index, 0, item);
+        setSelectedExercises(newExercises);
+        setDraggedItem(null);
+    };
+
+    const handleSort = () => {
+        const sorted = [...selectedExercises].sort((a, b) => {
+            return a.muscle_group.localeCompare(b.muscle_group);
+        });
+        setSelectedExercises(sorted);
+    };
+
     useEffect(() => {
         loadCatalog();
     }, []);
+
+    // Load initial data for editing
+    // Load initial data for editing, ensuring muscle_group is populated from catalog if missing
+    const lastInitializedId = React.useRef(null);
+    useEffect(() => {
+        if (initialData && catalog.length > 0 && lastInitializedId.current !== initialData.id) {
+            lastInitializedId.current = initialData.id;
+
+            setTitle(initialData.title || '');
+            setDescription(initialData.description || '');
+            setIcon(initialData.icon || 'dumbbell');
+
+            if (initialData.exercises) {
+                // Map saved exercises back to builder format
+                const formattedExercises = initialData.exercises.map(ex => {
+                    const catalogItem = catalog.find(c => c.id === ex.id);
+                    return {
+                        ...ex,
+                        muscle_group: ex.muscle_group || catalogItem?.muscle_group || 'Outros',
+                        catalog_id: ex.id, // The saved ID is the catalog ID
+                        id: Date.now() + Math.random(), // New temporary ID for builder UI tracking
+                        sets: ex.sets || [{ reps: 10, weight: 0 }]
+                    };
+                });
+                setSelectedExercises(formattedExercises);
+            }
+        }
+    }, [initialData, catalog]);
 
     const loadCatalog = async () => {
         const { data } = await supabase.from('exercise_catalog').select('*').order('name');
@@ -237,8 +294,26 @@ export default function WorkoutBuilder({ onSave, onCancel }) {
                     </div>
                 </div>
 
+
+
                 {/* Workout Preview */}
                 <div className={`flex-1 flex flex-col overflow-hidden h-full ${activeTab === 'workout' ? 'flex' : 'hidden md:flex'}`}>
+                    {/* Header for Preview */}
+                    <div className="flex items-center justify-between pb-2 px-1 border-b border-primary/10 mb-2 shrink-0">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                            {selectedExercises.length} EXERCÍCIOS
+                        </span>
+                        {selectedExercises.length > 1 && (
+                            <button
+                                onClick={handleSort}
+                                className="text-[10px] font-bold text-primary hover:bg-primary/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                                title="Agrupar por músculo"
+                            >
+                                <span className="material-icons-round text-sm">sort</span> ORGANIZAR
+                            </button>
+                        )}
+                    </div>
+
                     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1 pb-20 md:pb-0">
                         {selectedExercises.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-50 p-8 text-center">
@@ -248,8 +323,20 @@ export default function WorkoutBuilder({ onSave, onCancel }) {
                             </div>
                         ) : (
                             selectedExercises.map((ex, exIndex) => (
-                                <div key={ex.id} className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                    <div className="flex justify-between items-start mb-4 border-b border-slate-200 dark:border-white/5 pb-3">
+                                <div
+                                    key={ex.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, exIndex)}
+                                    onDragOver={(e) => handleDragOver(e, exIndex)}
+                                    onDrop={(e) => handleDrop(e, exIndex)}
+                                    className={`bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border transition-all ${draggedItem === exIndex ? 'opacity-50 border-primary border-dashed scale-[0.98]' : 'border-slate-100 dark:border-white/5 hover:border-primary/30'} animate-in fade-in slide-in-from-bottom-4 duration-300 relative group cursor-grab active:cursor-grabbing`}
+                                >
+                                    {/* Drag Handle */}
+                                    <div className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-600 opacity-0 group-hover:opacity-100 cursor-grab px-1">
+                                        <span className="material-icons-round text-lg">drag_indicator</span>
+                                    </div>
+
+                                    <div className="flex justify-between items-start mb-4 border-b border-slate-200 dark:border-white/5 pb-3 pl-6">
                                         <div>
                                             <h4 className="font-black text-slate-900 dark:text-white text-base">{ex.name}</h4>
                                             <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{ex.muscle_group}</span>
@@ -259,7 +346,7 @@ export default function WorkoutBuilder({ onSave, onCancel }) {
                                         </button>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 pl-6">
                                         <div className="grid grid-cols-5 gap-2 text-[9px] uppercase font-black text-slate-400 text-center tracking-widest">
                                             <span className="col-span-1">Série</span>
                                             <span className="col-span-3">Reps (Meta)</span>
