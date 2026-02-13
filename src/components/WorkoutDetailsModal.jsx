@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PlayCircle, Clock, CheckCircle, Dumbbell } from 'lucide-react';
+import { PlayCircle, Clock, CheckCircle, Dumbbell, PauseCircle, XCircle, Play } from 'lucide-react';
 import { workoutService } from '../services/workoutService';
 import { getIcon, emojiToIconMap } from '../utils/iconMap';
 import WorkoutSummaryModal from './WorkoutSummaryModal';
 
 export default function WorkoutDetailsModal({ workout, onClose }) {
     const [active, setActive] = useState(false);
+    const [paused, setPaused] = useState(false);
     const [timer, setTimer] = useState(0);
+    const [accumulatedTime, setAccumulatedTime] = useState(0);
     const [exercises, setExercises] = useState(workout.exercises || []);
     const startTimeRef = useRef(null);
 
@@ -19,14 +21,22 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
         if (savedState) {
             try {
                 const parsed = JSON.parse(savedState);
-                if (parsed.startTime) {
-                    startTimeRef.current = parsed.startTime;
-                    setExercises(parsed.exercises || workout.exercises || []);
+                if (parsed.active) {
                     setActive(true);
+                    setExercises(parsed.exercises || workout.exercises || []);
+                    setAccumulatedTime(parsed.accumulatedTime || 0);
 
-                    // Specific logic for recovering the timer immediately
-                    const elapsed = Math.floor((Date.now() - parsed.startTime) / 1000);
-                    setTimer(elapsed > 0 ? elapsed : 0);
+                    if (parsed.paused) {
+                        setPaused(true);
+                        setTimer(parsed.accumulatedTime || 0);
+                        startTimeRef.current = null;
+                    } else if (parsed.startTime) {
+                        setPaused(false);
+                        startTimeRef.current = parsed.startTime;
+                        // Calculate elapsed time correctly
+                        const currentSegment = Math.floor((Date.now() - parsed.startTime) / 1000);
+                        setTimer((parsed.accumulatedTime || 0) + currentSegment);
+                    }
                 }
             } catch (e) {
                 console.error("Error parsing saved workout state", e);
@@ -37,27 +47,31 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
     // Timer logic (Timestamp based)
     useEffect(() => {
         let interval;
-        if (active && startTimeRef.current) {
+        if (active && !paused && startTimeRef.current) {
             // Update immediately
-            setTimer(Math.floor((Date.now() - startTimeRef.current) / 1000));
+            const updateTimer = () => {
+                const currentSegment = Math.floor((Date.now() - startTimeRef.current) / 1000);
+                setTimer(accumulatedTime + currentSegment);
+            };
 
-            interval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-                setTimer(elapsed);
-            }, 1000);
+            updateTimer();
+            interval = setInterval(updateTimer, 1000);
         }
         return () => clearInterval(interval);
-    }, [active]);
+    }, [active, paused, accumulatedTime]);
 
-    // Save state whenever exercises change (if active)
+    // Save state whenever relevant data changes
     useEffect(() => {
-        if (active && startTimeRef.current) {
+        if (active) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                active: true,
                 startTime: startTimeRef.current,
+                accumulatedTime: accumulatedTime,
+                paused: paused,
                 exercises: exercises
             }));
         }
-    }, [exercises, active, STORAGE_KEY]);
+    }, [exercises, active, paused, accumulatedTime, STORAGE_KEY]);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
@@ -69,12 +83,38 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
         const now = Date.now();
         startTimeRef.current = now;
         setActive(true);
+        setPaused(false);
+        setAccumulatedTime(0);
+    };
 
-        // Save initial state
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            startTime: now,
-            exercises: exercises
-        }));
+    const handlePause = () => {
+        if (!startTimeRef.current) return;
+
+        const now = Date.now();
+        const currentSegment = Math.floor((now - startTimeRef.current) / 1000);
+        const newAccumulated = accumulatedTime + currentSegment;
+
+        setAccumulatedTime(newAccumulated);
+        setTimer(newAccumulated); // Fix timer display to show exact paused time
+        setPaused(true);
+        startTimeRef.current = null;
+    };
+
+    const handleResume = () => {
+        startTimeRef.current = Date.now();
+        setPaused(false);
+    };
+
+    const handleCancel = () => {
+        if (!confirm('Tem certeza que deseja cancelar o treino? Todo o progresso será perdido.')) return;
+
+        localStorage.removeItem(STORAGE_KEY);
+        setActive(false);
+        setPaused(false);
+        setTimer(0);
+        setAccumulatedTime(0);
+        setExercises(workout.exercises || []); // Reset exercises
+        onClose();
     };
 
     const [summaryData, setSummaryData] = useState(null);
@@ -271,9 +311,43 @@ export default function WorkoutDetailsModal({ workout, onClose }) {
                             </button>
                         </>
                     ) : (
-                        <button onClick={handleEnd} className="w-full py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:scale-[1.02] text-white font-black rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 flex items-center justify-center gap-2 transition-all text-xs uppercase tracking-wide group">
-                            <Clock size={18} className="group-hover:spin-slow" /> Encerrar
-                        </button>
+                        <div className="w-full grid grid-cols-4 gap-2">
+                            {/* Cancel Button */}
+                            <button
+                                onClick={handleCancel}
+                                className="col-span-1 py-3 bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-500 font-bold rounded-xl border border-white/10 hover:border-red-500/50 flex items-center justify-center gap-2 transition-all group"
+                                title="Cancelar Treino"
+                            >
+                                <XCircle size={20} className="group-hover:scale-110 transition-transform" />
+                            </button>
+
+                            {/* Pause/Resume Button */}
+                            {paused ? (
+                                <button
+                                    onClick={handleResume}
+                                    className="col-span-1 py-3 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 font-bold rounded-xl border border-yellow-500/20 hover:border-yellow-500/50 flex items-center justify-center gap-2 transition-all group"
+                                    title="Retomar"
+                                >
+                                    <Play size={20} className="fill-current" />
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handlePause}
+                                    className="col-span-1 py-3 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 font-bold rounded-xl border border-yellow-500/20 hover:border-yellow-500/50 flex items-center justify-center gap-2 transition-all group"
+                                    title="Pausar"
+                                >
+                                    <PauseCircle size={20} />
+                                </button>
+                            )}
+
+                            {/* Finish Button */}
+                            <button
+                                onClick={handleEnd}
+                                className="col-span-2 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-[1.02] text-white font-black rounded-xl shadow-lg shadow-green-500/25 hover:shadow-green-500/40 flex items-center justify-center gap-2 transition-all text-xs uppercase tracking-wide group"
+                            >
+                                <CheckCircle size={18} className="group-hover:scale-110 transition-transform" /> Finalizar
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
