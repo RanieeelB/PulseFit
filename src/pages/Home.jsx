@@ -4,6 +4,7 @@ import { workoutService } from '../services/workoutService';
 import { getRandomTip } from '../utils/tips';
 import { Plus, CheckCircle, PlayCircle, Clock, Moon, Flame, Zap, Activity, TrendingUp, Calendar } from 'lucide-react';
 import { getIcon, emojiToIconMap } from '../utils/iconMap';
+import Leaderboard from '../components/Leaderboard';
 
 export default function Home() {
     const [workouts, setWorkouts] = useState([]);
@@ -96,6 +97,9 @@ export default function Home() {
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 relative z-10">Dias Streak</span>
                 </div>
             </div>
+
+            {/* Leaderboard */}
+            <Leaderboard />
 
             {/* Workout Grid */}
             <div className="space-y-6">

@@ -127,6 +127,13 @@ export const workoutService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        // Fetch user name for denormalization
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', user.id)
+            .single();
+
         const { error } = await supabase
             .from('workout_logs')
             .insert([{
@@ -134,6 +141,7 @@ export const workoutService = {
                 workout_id: workoutId,
                 duration_minutes: durationMinutes,
                 calories: calories,
+                user_name: profile?.name || 'Atleta PulseFit',
                 completed_at: new Date().toISOString()
             }]);
 
@@ -485,5 +493,65 @@ export const workoutService = {
             return [];
         }
         return data;
+    },
+
+    async getLeaderboard() {
+        try {
+            const last7Days = new Date();
+            last7Days.setDate(last7Days.getDate() - 7);
+
+            // Fetch logs first (most resilient)
+            const { data: logs, error: logsError } = await supabase
+                .from('workout_logs')
+                .select('user_id, user_name, completed_at')
+                .gte('completed_at', last7Days.toISOString());
+
+            if (logsError) throw logsError;
+            if (!logs || logs.length === 0) return [];
+
+            // Group by user and count
+            const userStats = {};
+            const uniqueUserIds = [];
+
+            logs.forEach(log => {
+                const uid = log.user_id;
+                if (!userStats[uid]) {
+                    userStats[uid] = {
+                        name: log.user_name || 'Atleta PulseFit',
+                        avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
+                        count: 0
+                    };
+                    uniqueUserIds.push(uid);
+                }
+                userStats[uid].count++;
+            });
+
+            // Fetch profile avatars separately to avoid JOIN errors (PGRST200)
+            const { data: profiles, error: profError } = await supabase
+                .from('profiles')
+                .select('id, name, avatar')
+                .in('id', uniqueUserIds);
+
+            if (!profError && profiles) {
+                profiles.forEach(p => {
+                    if (userStats[p.id]) {
+                        // Priority: use log name if exists, fallback to profile name
+                        if (!userStats[p.id].name || userStats[p.id].name === 'Atleta PulseFit') {
+                            userStats[p.id].name = p.name;
+                        }
+                        userStats[p.id].avatar = p.avatar || userStats[p.id].avatar;
+                    }
+                });
+            }
+
+            // Sort and take top 5
+            return Object.values(userStats)
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+
+        } catch (error) {
+            console.error('Error calculating leaderboard:', error);
+            return [];
+        }
     }
 };
