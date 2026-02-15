@@ -30,7 +30,7 @@ O **PulseFit** é a sua plataforma definitiva para gerenciamento de treinos de m
 *   **Hidratação:** Tracker de água integrado para garantir sua meta diária.
 *   **Favoritos:** Salve seus alimentos mais consumidos para acesso rápido.
 
-### 👥 **Comunidade (Social)**
+### 👥 **Comunidade (Social)** (ainda em desenvolvimento)
 *   **Feed de Atividades:** Veja os treinos e conquistas de outros usuários.
 *   **Ranking:** Compare seu progresso com a comunidade PulseFit.
 
