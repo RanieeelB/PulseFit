@@ -255,9 +255,10 @@ export default function WorkoutSummaryModal({ summary, onClose, workoutTitle }) 
                 <div className="flex flex-col md:flex-row items-center justify-center gap-4 pb-12 shrink-0 w-full px-4">
                     <button
                         onClick={onClose}
-                        className="w-full md:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-slate-300 font-bold rounded-xl transition-colors text-sm uppercase tracking-wide border border-white/5 flex-1 md:flex-none cursor-pointer"
+                        disabled={summary.isLoading}
+                        className={`w-full md:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-slate-300 font-bold rounded-xl transition-colors text-sm uppercase tracking-wide border border-white/5 flex-1 md:flex-none cursor-pointer ${summary.isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        Voltar ao Início
+                        {summary.isLoading ? 'Processando...' : 'Voltar ao Início'}
                     </button>
                 </div>
             </main>

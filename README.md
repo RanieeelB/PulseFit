@@ -22,9 +22,13 @@ O **PulseFit** é a sua plataforma definitiva para gerenciamento de treinos de m
 *   **Recordes Pessoais (PRs):** Mantenha o registro das suas maiores cargas em exercícios chave (Supino, Agachamento, Terra, etc.).
 *   **Streak & Performance:** Gamificação do seu progresso com contagem de dias seguidos (Streak) e índice de performance mensal.
 
-### 🥗 **Nutrição & Dieta (Em Breve/Beta)**
-*   **Calculadora de Macros:** Defina suas metas de Calorias, Proteínas, Carboidratos e Gorduras.
-*   **Registro de Refeições:** Adicione o que você comeu ao longo do dia para manter o controle.
+### 🥗 **Nutrição & Dieta Completa**
+*   **Banco de Dados Brasileiro:** Integração com a tabela **TACO** e alimentos comuns do dia a dia.
+*   **Busca Inteligente:** Pesquise alimentos instantaneamente ou cadastre seus próprios itens personalizados.
+*   **Controle de Macros:** Visualização detalhada de Calorias, Proteínas, Carboidratos, Gorduras e Fibras com gráficos de progresso.
+*   **Diário Alimentar:** Registre Café da Manhã, Almoço, Jantar e Lanches com cálculo automático de porções.
+*   **Hidratação:** Tracker de água integrado para garantir sua meta diária.
+*   **Favoritos:** Salve seus alimentos mais consumidos para acesso rápido.
 
 ### 👥 **Comunidade (Social)**
 *   **Feed de Atividades:** Veja os treinos e conquistas de outros usuários.

@@ -43,10 +43,10 @@ function App() {
                 <main className="flex-grow w-full">
                     <Routes>
                         <Route path="/" element={<Home />} />
-                        <Route path="/index.html" element={<Home />} /> {/* Redirect/Alias */}
-                        <Route path="/progress.html" element={<Progress />} />
-                        <Route path="/diet.html" element={<Diet />} />
-                        <Route path="/social.html" element={<Social />} />
+                        <Route path="/progress" element={<Progress />} />
+                        <Route path="/diet" element={<Diet />} />
+                        <Route path="/social" element={<Social />} />
+                        <Route path="*" element={<Home />} />
                     </Routes>
                 </main>
 

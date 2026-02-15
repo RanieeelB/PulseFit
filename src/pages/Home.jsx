@@ -14,6 +14,7 @@ export default function Home() {
     const [tip, setTip] = useState('');
     const [loading, setLoading] = useState(true);
     const [selectedWorkout, setSelectedWorkout] = useState(null);
+    const [activeTheme, setActiveTheme] = useState(null);
 
     const loadData = async () => {
         try {
@@ -116,7 +117,10 @@ export default function Home() {
                                 key={workout.id}
                                 workout={workout}
                                 index={index}
-                                onClick={() => setSelectedWorkout(workout)}
+                                onClick={() => {
+                                    setSelectedWorkout(workout);
+                                    setActiveTheme(themeColors[index % themeColors.length]);
+                                }}
                             />
                         ))
                     ) : (
@@ -144,8 +148,10 @@ export default function Home() {
             {selectedWorkout && (
                 <WorkoutDetailsModal
                     workout={selectedWorkout}
+                    theme={activeTheme}
                     onClose={() => {
                         setSelectedWorkout(null);
+                        setActiveTheme(null);
                         loadData();
                     }}
                 />
@@ -169,81 +175,89 @@ function StatCard({ value, label, color = "text-white", icon, delay }) {
 // Theme Colors Configuration
 const themeColors = [
     {
-        name: 'purple',
-        border: 'border-purple-500/50',
-        borderHover: 'group-hover:border-purple-500',
-        iconBg: 'bg-purple-500/20 text-purple-400',
-        iconBorder: 'border-purple-500/20',
-        glow: 'bg-purple-500',
-        text: 'group-hover:text-purple-400',
-        shadow: 'shadow-purple-500/20',
-        gradient: 'from-purple-500 to-indigo-600'
+        name: 'violet',
+        border: 'border-violet-500/30',
+        borderHover: 'group-hover:border-violet-500',
+        iconBg: 'bg-violet-500/10 text-violet-400',
+        iconBorder: 'border-violet-500/20',
+        glow: 'bg-violet-500',
+        text: 'group-hover:text-violet-400',
+        shadow: 'shadow-violet-500/20',
+        gradient: 'from-violet-600/20 to-indigo-600/20',
+        solidGradient: 'from-violet-600 to-indigo-600',
+        modal: {
+            hoverBorder: 'hover:border-violet-500/30',
+            buttonShadow: 'shadow-violet-500/25 hover:shadow-violet-500/40',
+            checkbox: 'peer-checked:bg-violet-500 peer-checked:shadow-violet-500/50'
+        }
     },
     {
-        name: 'red',
-        border: 'border-red-500/50',
-        borderHover: 'group-hover:border-red-500',
-        iconBg: 'bg-red-500/20 text-red-400',
-        iconBorder: 'border-red-500/20',
-        glow: 'bg-red-500',
-        text: 'group-hover:text-red-400',
-        shadow: 'shadow-red-500/20',
-        gradient: 'from-red-500 to-orange-600'
+        name: 'emerald',
+        border: 'border-emerald-500/30',
+        borderHover: 'group-hover:border-emerald-500',
+        iconBg: 'bg-emerald-500/10 text-emerald-400',
+        iconBorder: 'border-emerald-500/20',
+        glow: 'bg-emerald-500',
+        text: 'group-hover:text-emerald-400',
+        shadow: 'shadow-emerald-500/20',
+        gradient: 'from-emerald-600/20 to-teal-600/20',
+        solidGradient: 'from-emerald-600 to-teal-600',
+        modal: {
+            hoverBorder: 'hover:border-emerald-500/30',
+            buttonShadow: 'shadow-emerald-500/25 hover:shadow-emerald-500/40',
+            checkbox: 'peer-checked:bg-emerald-500 peer-checked:shadow-emerald-500/50'
+        }
     },
     {
-        name: 'yellow',
-        border: 'border-yellow-500/50',
-        borderHover: 'group-hover:border-yellow-500',
-        iconBg: 'bg-yellow-500/20 text-yellow-400',
-        iconBorder: 'border-yellow-500/20',
-        glow: 'bg-yellow-500',
-        text: 'group-hover:text-yellow-400',
-        shadow: 'shadow-yellow-500/20',
-        gradient: 'from-yellow-400 to-amber-600'
+        name: 'amber',
+        border: 'border-amber-500/30',
+        borderHover: 'group-hover:border-amber-500',
+        iconBg: 'bg-amber-500/10 text-amber-400',
+        iconBorder: 'border-amber-500/20',
+        glow: 'bg-amber-500',
+        text: 'group-hover:text-amber-400',
+        shadow: 'shadow-amber-500/20',
+        gradient: 'from-amber-600/20 to-orange-600/20',
+        solidGradient: 'from-amber-600 to-orange-600',
+        modal: {
+            hoverBorder: 'hover:border-amber-500/30',
+            buttonShadow: 'shadow-amber-500/25 hover:shadow-amber-500/40',
+            checkbox: 'peer-checked:bg-amber-500 peer-checked:shadow-amber-500/50'
+        }
     },
     {
-        name: 'orange',
-        border: 'border-orange-500/50',
-        borderHover: 'group-hover:border-orange-500',
-        iconBg: 'bg-orange-500/20 text-orange-400',
-        iconBorder: 'border-orange-500/20',
-        glow: 'bg-orange-500',
-        text: 'group-hover:text-orange-400',
-        shadow: 'shadow-orange-500/20',
-        gradient: 'from-orange-500 to-red-600'
+        name: 'sky',
+        border: 'border-sky-500/30',
+        borderHover: 'group-hover:border-sky-500',
+        iconBg: 'bg-sky-500/10 text-sky-400',
+        iconBorder: 'border-sky-500/20',
+        glow: 'bg-sky-500',
+        text: 'group-hover:text-sky-400',
+        shadow: 'shadow-sky-500/20',
+        gradient: 'from-sky-600/20 to-cyan-600/20',
+        solidGradient: 'from-sky-600 to-cyan-600',
+        modal: {
+            hoverBorder: 'hover:border-sky-500/30',
+            buttonShadow: 'shadow-sky-500/25 hover:shadow-sky-500/40',
+            checkbox: 'peer-checked:bg-sky-500 peer-checked:shadow-sky-500/50'
+        }
     },
     {
-        name: 'blue',
-        border: 'border-blue-500/50',
-        borderHover: 'group-hover:border-blue-500',
-        iconBg: 'bg-blue-500/20 text-blue-400',
-        iconBorder: 'border-blue-500/20',
-        glow: 'bg-blue-500',
-        text: 'group-hover:text-blue-400',
-        shadow: 'shadow-blue-500/20',
-        gradient: 'from-blue-500 to-cyan-600'
-    },
-    {
-        name: 'pink',
-        border: 'border-pink-500/50',
-        borderHover: 'group-hover:border-pink-500',
-        iconBg: 'bg-pink-500/20 text-pink-400',
-        iconBorder: 'border-pink-500/20',
-        glow: 'bg-pink-500',
-        text: 'group-hover:text-pink-400',
-        shadow: 'shadow-pink-500/20',
-        gradient: 'from-pink-500 to-rose-600'
-    },
-    {
-        name: 'cyan',
-        border: 'border-cyan-500/50',
-        borderHover: 'group-hover:border-cyan-500',
-        iconBg: 'bg-cyan-500/20 text-cyan-400',
-        iconBorder: 'border-cyan-500/20',
-        glow: 'bg-cyan-500',
-        text: 'group-hover:text-cyan-400',
-        shadow: 'shadow-cyan-500/20',
-        gradient: 'from-cyan-500 to-blue-600'
+        name: 'rose',
+        border: 'border-rose-500/30',
+        borderHover: 'group-hover:border-rose-500',
+        iconBg: 'bg-rose-500/10 text-rose-400',
+        iconBorder: 'border-rose-500/20',
+        glow: 'bg-rose-500',
+        text: 'group-hover:text-rose-400',
+        shadow: 'shadow-rose-500/20',
+        gradient: 'from-rose-600/20 to-pink-600/20',
+        solidGradient: 'from-rose-600 to-pink-600',
+        modal: {
+            hoverBorder: 'hover:border-rose-500/30',
+            buttonShadow: 'shadow-rose-500/25 hover:shadow-rose-500/40',
+            checkbox: 'peer-checked:bg-rose-500 peer-checked:shadow-rose-500/50'
+        }
     }
 ];
 

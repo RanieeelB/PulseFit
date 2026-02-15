@@ -50,3 +50,60 @@
 .animate-slide-up {
     animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Neon Macro Sliders */
+input[type=range].neon-slider {
+    -webkit-appearance: none;
+    background: transparent;
+    width: 100%;
+}
+
+input[type=range].neon-slider:focus {
+    outline: none;
+}
+
+input[type=range].neon-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+input[type=range].neon-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -8px;
+}
+
+/* Green - Protein */
+.slider-green::-webkit-slider-runnable-track {
+    background: rgba(57, 255, 20, 0.2);
+}
+
+.slider-green::-webkit-slider-thumb {
+    background: #39FF14;
+    box-shadow: 0 0 10px #39FF14;
+}
+
+/* Yellow - Carbs */
+.slider-yellow::-webkit-slider-runnable-track {
+    background: rgba(255, 255, 0, 0.2);
+}
+
+.slider-yellow::-webkit-slider-thumb {
+    background: #FFFF00;
+    box-shadow: 0 0 10px #FFFF00;
+}
+
+/* Pink - Fats */
+.slider-pink::-webkit-slider-runnable-track {
+    background: rgba(255, 0, 255, 0.2);
+}
+
+.slider-pink::-webkit-slider-thumb {
+    background: #FF00FF;
+    box-shadow: 0 0 10px #FF00FF;
+}

@@ -24,8 +24,8 @@ export default function ProfileModal() {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 2MB.');
+        if (file.size > 50 * 1024 * 1024) {
+            alert('A imagem deve ter no máximo 50MB.');
             return;
         }
 

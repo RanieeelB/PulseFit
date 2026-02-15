@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { userService } from '../services/userService';
 import { User, LogIn, Menu, X, Dumbbell, BarChart2, Utensils, Users, Bell } from 'lucide-react';
+import logo from '../assets/logopulsefit.png.jpg';
 
 export default function Navbar() {
     const [user, setUser] = useState(null);
@@ -33,9 +34,9 @@ export default function Navbar() {
 
     const links = [
         { name: 'Treinos', path: '/', icon: <Dumbbell size={22} /> },
-        { name: 'Progresso', path: '/progress.html', icon: <BarChart2 size={22} /> },
-        { name: 'Dieta', path: '/diet.html', icon: <Utensils size={22} /> },
-        { name: 'Social', path: '/social.html', icon: <Users size={22} /> }
+        { name: 'Progresso', path: '/progress', icon: <BarChart2 size={22} /> },
+        { name: 'Dieta', path: '/diet', icon: <Utensils size={22} /> },
+        { name: 'Social', path: '/social', icon: <Users size={22} /> }
     ];
 
     const openAuth = () => window.dispatchEvent(new CustomEvent('open-auth-modal'));
@@ -47,20 +48,15 @@ export default function Navbar() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
                         {/* Logo */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-400 flex items-center justify-center shadow-lg shadow-primary/20">
-                                <span className="material-icons-round text-white">fitness_center</span>
-                            </div>
-                            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                                Pulse<span className="text-primary">Fit</span>
-                            </span>
+                        <div className="flex items-center">
+                            <img src={logo} alt="PulseFit" className="h-16 w-auto" />
                         </div>
 
                         {/* Desktop Links */}
                         <div className="hidden md:block">
                             <div className="flex items-baseline space-x-2">
                                 {links.map(link => {
-                                    const isActive = activePath === link.path || (link.path === '/' && activePath === '/index.html');
+                                    const isActive = activePath === link.path;
                                     return (
                                         <Link
                                             key={link.name}
@@ -129,7 +125,7 @@ export default function Navbar() {
             <div className="md:hidden fixed bottom-4 inset-x-0 z-50 flex justify-center pointer-events-none">
                 <div className="pointer-events-auto bg-[#050505]/80 backdrop-blur-2xl border border-white/5 rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] flex items-center p-1.5 gap-1 ring-1 ring-white/5 transition-all">
                     {links.map(link => {
-                        const isActive = activePath === link.path || (link.path === '/' && activePath === '/index.html');
+                        const isActive = activePath === link.path;
                         return (
                             <Link
                                 key={link.name}
