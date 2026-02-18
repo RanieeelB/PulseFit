@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { dietService } from '../services/dietService';
 import { foodService } from '../services/foodService';
+import { getLocalDate } from '../utils/dateUtils';
 import AddFoodModal from '../components/AddFoodModal';
 import DietSettingsModal from '../components/DietSettingsModal';
+import DaySelector from '../components/DaySelector';
 import WaterTracker from '../components/WaterTracker';
 import {
     Activity,
@@ -28,6 +30,9 @@ export default function Diet() {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedMeal, setSelectedMeal] = useState(null);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(getLocalDate());
+
+    const isToday = selectedDate === getLocalDate();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -41,7 +46,16 @@ export default function Diet() {
 
     useEffect(() => {
         loadDietData();
+        // Background cleanup of logs older than 7 days
+        foodService.cleanupOldLogs();
     }, []);
+
+    // Re-fetch logs when selected date changes
+    useEffect(() => {
+        if (profile) {
+            fetchFoodLogs(selectedDate);
+        }
+    }, [selectedDate]);
 
     const loadDietData = async () => {
         const savedProfile = await dietService.getDietProfile();
@@ -49,13 +63,13 @@ export default function Diet() {
             const calculated = dietService.calculateCalories(savedProfile);
             setProfile(savedProfile);
             setCalories(calculated);
-            await fetchFoodLogs();
+            await fetchFoodLogs(getLocalDate());
         }
         setLoading(false);
     };
 
-    const fetchFoodLogs = async () => {
-        const logs = await foodService.getDailyLog(new Date());
+    const fetchFoodLogs = async (date) => {
+        const logs = await foodService.getDailyLog(date || selectedDate);
         setFoodLogs(logs);
     };
 
@@ -176,8 +190,8 @@ export default function Diet() {
                         <div>
                             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Dieta</h1>
                             <p className="text-slate-500 text-sm flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                                Hoje
+                                <span className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-primary animate-pulse' : 'bg-slate-500'}`}></span>
+                                {isToday ? 'Hoje' : 'Histórico'}
                             </p>
                         </div>
                         <div className="flex gap-2">
@@ -189,6 +203,9 @@ export default function Diet() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Day Selector */}
+                    <DaySelector selectedDate={selectedDate} onSelectDate={setSelectedDate} />
 
                     {/* Macro Summary Card */}
                     <div className="bg-[#121218] rounded-3xl p-6 relative overflow-hidden border border-[#27272a] shadow-2xl relative group">
@@ -309,12 +326,14 @@ export default function Diet() {
                                     <div className="p-4 md:p-5">
                                         <div className="flex justify-between items-center mb-1">
                                             <h3 className="text-base font-bold text-white">{mealName}</h3>
-                                            <button
-                                                onClick={() => openAddFoodModal(meal)}
-                                                className="p-2 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors hover:shadow-[0_0_10px_rgba(139,92,246,0.2)]"
-                                            >
-                                                <Plus size={18} />
-                                            </button>
+                                            {isToday && (
+                                                <button
+                                                    onClick={() => openAddFoodModal(meal)}
+                                                    className="p-2 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors hover:shadow-[0_0_10px_rgba(139,92,246,0.2)]"
+                                                >
+                                                    <Plus size={18} />
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
@@ -340,22 +359,24 @@ export default function Diet() {
                                                                 <span className="text-slate-400/70">F:{log.calculated.fiber || 0}g</span>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                                                            <button
-                                                                onClick={() => handleEditLog(log)}
-                                                                className="p-1.5 text-slate-600 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                                                                title="Editar quantidade"
-                                                            >
-                                                                <Pencil size={14} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleRemoveLog(log.id)}
-                                                                className="p-1.5 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                                                title="Remover"
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </div>
+                                                        {isToday && (
+                                                            <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                                                                <button
+                                                                    onClick={() => handleEditLog(log)}
+                                                                    className="p-1.5 text-slate-600 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                                                    title="Editar quantidade"
+                                                                >
+                                                                    <Pencil size={14} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleRemoveLog(log.id)}
+                                                                    className="p-1.5 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                                    title="Remover"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -380,7 +401,7 @@ export default function Diet() {
                     isOpen={modalOpen}
                     onClose={() => setModalOpen(false)}
                     mealType={selectedMeal}
-                    onFoodAdded={fetchFoodLogs}
+                    onFoodAdded={() => fetchFoodLogs(selectedDate)}
                 />
 
                 <DietSettingsModal

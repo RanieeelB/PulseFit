@@ -291,5 +291,32 @@ export const foodService = {
             fat: Math.round(food.fat * ratio),
             fiber: Math.round(food.fiber * ratio)
         };
+    },
+
+    /**
+     * Deletes food_log entries older than 7 days for the current user.
+     * Called as background cleanup when the diet page loads.
+     */
+    async cleanupOldLogs() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 7);
+            const cutoff = `${cutoffDate.getFullYear()}-${String(cutoffDate.getMonth() + 1).padStart(2, '0')}-${String(cutoffDate.getDate()).padStart(2, '0')}`;
+
+            const { error } = await supabase
+                .from('food_log')
+                .delete()
+                .eq('user_id', user.id)
+                .lt('date', cutoff);
+
+            if (error) {
+                console.error('Error cleaning up old food logs:', error);
+            }
+        } catch (error) {
+            console.error('Error in cleanupOldLogs:', error);
+        }
     }
 };
