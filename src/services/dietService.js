@@ -1,4 +1,6 @@
 
+import { supabase } from './supabaseClient.js';
+
 const DIET_PROFILE_KEY = 'pulsefit_diet_profile';
 
 export const MEAL_DISTRIBUTION = {
@@ -9,10 +11,25 @@ export const MEAL_DISTRIBUTION = {
 };
 
 export const dietService = {
-    // Save profile to localStorage
-    saveDietProfile(profile) {
+    // Save profile to both Supabase and localStorage (localStorage as cache)
+    async saveDietProfile(profile) {
         try {
+            // Save to localStorage as cache
             localStorage.setItem(DIET_PROFILE_KEY, JSON.stringify(profile));
+
+            // Save to Supabase (tied to user account)
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ diet_profile: profile })
+                    .eq('id', user.id);
+
+                if (error) {
+                    console.error('Error saving diet profile to Supabase:', error);
+                }
+            }
+
             return profile;
         } catch (error) {
             console.error('Error saving diet profile:', error);
@@ -33,21 +50,66 @@ export const dietService = {
         }
     },
 
-    // Get profile from localStorage
-    getDietProfile() {
+    // Get profile: try Supabase first, then localStorage as fallback
+    async getDietProfile() {
         try {
-            const profile = localStorage.getItem(DIET_PROFILE_KEY);
-            return profile ? JSON.parse(profile) : null;
+            // Try Supabase first (source of truth)
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profileRow, error } = await supabase
+                    .from('profiles')
+                    .select('diet_profile')
+                    .eq('id', user.id)
+                    .single();
+
+                if (!error && profileRow && profileRow.diet_profile) {
+                    // Also update localStorage cache
+                    localStorage.setItem(DIET_PROFILE_KEY, JSON.stringify(profileRow.diet_profile));
+                    return profileRow.diet_profile;
+                }
+            }
+
+            // Fallback to localStorage (for offline or if DB column doesn't exist yet)
+            const localProfile = localStorage.getItem(DIET_PROFILE_KEY);
+            if (localProfile) {
+                const parsed = JSON.parse(localProfile);
+                // If we have a user and a local profile but nothing in DB, sync it up
+                if (user && parsed) {
+                    await supabase
+                        .from('profiles')
+                        .update({ diet_profile: parsed })
+                        .eq('id', user.id)
+                        .then(() => { })
+                        .catch(() => { });
+                }
+                return parsed;
+            }
+
+            return null;
         } catch (error) {
             console.error('Error loading diet profile:', error);
-            return null;
+            // Ultimate fallback to localStorage
+            try {
+                const localProfile = localStorage.getItem(DIET_PROFILE_KEY);
+                return localProfile ? JSON.parse(localProfile) : null;
+            } catch {
+                return null;
+            }
         }
     },
 
     // Clear profile (e.g., to reset onboarding)
-    clearDietProfile() {
+    async clearDietProfile() {
         try {
             localStorage.removeItem(DIET_PROFILE_KEY);
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                await supabase
+                    .from('profiles')
+                    .update({ diet_profile: null })
+                    .eq('id', user.id);
+            }
         } catch (error) {
             console.error('Error clearing diet profile:', error);
         }

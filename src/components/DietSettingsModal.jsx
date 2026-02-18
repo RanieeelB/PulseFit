@@ -76,7 +76,7 @@ export default function DietSettingsModal({ isOpen, onClose, profile, onSave }) 
     const carbsOffset = -proteinDash;
     const fatOffset = -(proteinDash + carbsDash);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const updatedProfile = {
             ...profile,
             goal,
@@ -87,7 +87,7 @@ export default function DietSettingsModal({ isOpen, onClose, profile, onSave }) 
                 fat: Math.round(fat)
             }
         };
-        dietService.saveDietProfile(updatedProfile);
+        await dietService.saveDietProfile(updatedProfile);
         onSave(updatedProfile);
         onClose();
     };
@@ -131,8 +131,8 @@ export default function DietSettingsModal({ isOpen, onClose, profile, onSave }) 
                                         type="button"
                                         onClick={() => handleGoalChange(g.id)}
                                         className={`group flex flex-col items-center justify-center p-6 border rounded-2xl transition-all relative overflow-hidden h-28 ${isActive
-                                                ? 'border-purple-500 bg-purple-500/10 shadow-[0_0_15px_rgba(139,92,246,0.15)]'
-                                                : 'border-white/5 bg-[#1A1A22] hover:border-purple-500/50 hover:bg-[#20202A]'
+                                            ? 'border-purple-500 bg-purple-500/10 shadow-[0_0_15px_rgba(139,92,246,0.15)]'
+                                            : 'border-white/5 bg-[#1A1A22] hover:border-purple-500/50 hover:bg-[#20202A]'
                                             }`}
                                     >
                                         {isActive && (
@@ -302,8 +302,8 @@ export default function DietSettingsModal({ isOpen, onClose, profile, onSave }) 
                         onClick={handleSave}
                         disabled={totalPercent !== 100}
                         className={`group w-full font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-3 text-lg uppercase tracking-widest relative overflow-hidden ${totalPercent === 100
-                                ? 'bg-purple-500 hover:bg-purple-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] transform hover:-translate-y-1 active:translate-y-0'
-                                : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                            ? 'bg-purple-500 hover:bg-purple-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] transform hover:-translate-y-1 active:translate-y-0'
+                            : 'bg-slate-700 text-slate-400 cursor-not-allowed'
                             }`}
                     >
                         <span className="relative z-10">Salvar Alterações</span>

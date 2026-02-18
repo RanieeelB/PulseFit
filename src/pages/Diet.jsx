@@ -44,7 +44,7 @@ export default function Diet() {
     }, []);
 
     const loadDietData = async () => {
-        const savedProfile = dietService.getDietProfile();
+        const savedProfile = await dietService.getDietProfile();
         if (savedProfile) {
             const calculated = dietService.calculateCalories(savedProfile);
             setProfile(savedProfile);
@@ -68,14 +68,14 @@ export default function Diet() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.age || !formData.weight || !formData.height) {
             alert('Por favor, preencha todos os campos obrigatórios.');
             return;
         }
 
-        const saved = dietService.saveDietProfile({
+        await dietService.saveDietProfile({
             ...formData,
             age: Number(formData.age),
             weight: Number(formData.weight),
@@ -85,9 +85,9 @@ export default function Diet() {
         loadDietData();
     };
 
-    const handleRecalculate = () => {
+    const handleRecalculate = async () => {
         if (window.confirm('Tem certeza que deseja recalcular? Seus dados atuais serão substituídos.')) {
-            dietService.clearDietProfile();
+            await dietService.clearDietProfile();
             setProfile(null);
             setCalories(null);
             setFoodLogs([]);
