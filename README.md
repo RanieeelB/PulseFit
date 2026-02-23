@@ -1,4 +1,4 @@
-# ⚡ PulseFit (2.0) - Evolução Constante
+# ⚡ PulseFit
  
 ![PulseFit Cover](https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop)
 
