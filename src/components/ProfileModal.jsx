@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { userService } from '../services/userService';
-import { Camera, Save, X, User, Mail, Ruler, Weight } from 'lucide-react';
+import { Camera, Save, X, User, Mail, Ruler, Weight, Lock, ChevronDown } from 'lucide-react';
 
 export default function ProfileModal() {
     const dialogRef = useRef(null);
     const [user, setUser] = useState({ name: '', email: '', avatar: '', weight: 0, height: 0 });
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
+    const [passwordError, setPasswordError] = useState('');
 
     useEffect(() => {
         const open = async () => {
@@ -44,13 +47,45 @@ export default function ProfileModal() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setPasswordError('');
 
         try {
+            // Se o usuário estiver tentando trocar a senha
+            if (isChangingPassword) {
+                if (!passwordData.newPassword || !passwordData.confirmPassword) {
+                    setPasswordError('Preencha os dois campos de senha');
+                    setLoading(false);
+                    return;
+                }
+                if (passwordData.newPassword !== passwordData.confirmPassword) {
+                    setPasswordError('As senhas não coincidem');
+                    setLoading(false);
+                    return;
+                }
+                if (passwordData.newPassword.length < 6) {
+                    setPasswordError('A senha deve ter no mínimo 6 caracteres');
+                    setLoading(false);
+                    return;
+                }
+
+                await userService.updatePassword(passwordData.newPassword);
+                alert('Senha alterada com sucesso!');
+            }
+
+            // Salva as outras informações do perfil sempre
             await userService.saveProfile(user);
+
+            // Limpa o estado e fecha
+            setPasswordData({ newPassword: '', confirmPassword: '' });
+            setIsChangingPassword(false);
             dialogRef.current?.close();
         } catch (error) {
             console.error(error);
-            alert('Erro ao salvar perfil');
+            setPasswordError(error.message || 'Erro ao salvar alterações');
+            // Remove o alert feio e usa o error inline se for erro de senha, ou alert se for geral
+            if (!isChangingPassword) {
+                alert('Erro ao salvar perfil');
+            }
         } finally {
             setLoading(false);
         }
@@ -159,12 +194,51 @@ export default function ProfileModal() {
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Password Change Toggle */}
                         <div className="pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsChangingPassword(!isChangingPassword)}
+                                className="w-full py-3 bg-white/5 text-slate-300 font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center justify-between px-4 border border-white/5"
+                            >
+                                <span className="flex items-center gap-2"><Lock size={16} /> Trocar Senha</span>
+                                <ChevronDown size={16} className={`transition-transform ${isChangingPassword ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Password Fields */}
+                            {isChangingPassword && (
+                                <div className="mt-4 space-y-3 p-4 bg-black/40 rounded-xl border border-white/5 animate-in slide-in-from-top-2">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 pl-1">Nova Senha</label>
+                                        <input
+                                            type="password"
+                                            value={passwordData.newPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                            className="w-full bg-white/5 border border-white/5 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors"
+                                            placeholder="Min. 6 caracteres"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 pl-1">Confirmar Nova Senha</label>
+                                        <input
+                                            type="password"
+                                            value={passwordData.confirmPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                            className="w-full bg-white/5 border border-white/5 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors"
+                                            placeholder="Digite novamente"
+                                        />
+                                    </div>
+                                    {passwordError && <p className="text-red-400 text-xs mt-1 text-center font-medium">{passwordError}</p>}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pt-4">
                             <button
                                 type="submit"
                                 disabled={loading || uploading}
-                                className="w-full py-4 bg-white text-black font-black rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xl shadow-white/10"
+                                className="w-full py-4 bg-white text-black font-black rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                             >
                                 {loading ? 'Salvando...' : (
                                     <>

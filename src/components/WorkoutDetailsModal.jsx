@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PlayCircle, Clock, CheckCircle, Dumbbell, PauseCircle, XCircle, Play, Check } from 'lucide-react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { workoutService } from '../services/workoutService';
 import { getIcon, emojiToIconMap } from '../utils/iconMap';
 import WorkoutSummaryModal from './WorkoutSummaryModal';
@@ -203,7 +204,13 @@ export default function WorkoutDetailsModal({ workout, onClose, theme }) {
         newExercises[exerciseIndex] = { ...newExercises[exerciseIndex], sets: newSets };
 
         if (field === 'completed' && value === true) {
-            if (navigator.vibrate) navigator.vibrate(50);
+            try {
+                // Try Capacitor native haptics first
+                Haptics.impact({ style: ImpactStyle.Heavy });
+            } catch (error) {
+                // Fallback to web API for browsers
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
         }
 
         setExercises(newExercises);

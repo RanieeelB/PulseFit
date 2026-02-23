@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
     --color-primary: #5b13ec;
     --color-primary-hover: #4a0bc4;
@@ -13,7 +15,7 @@
 
 @layer base {
     body {
-        @apply font-display antialiased bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200;
+        @apply font-display antialiased bg-background-dark text-slate-200;
     }
 }
 
@@ -41,14 +43,26 @@
         opacity: 0;
     }
 
+}
+
+@keyframes fade-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
     to {
-        transform: translateY(0);
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
 .animate-slide-up {
     animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-down {
+    animation: fade-in-down 0.4s ease-out forwards;
 }
 
 /* Neon Macro Sliders */

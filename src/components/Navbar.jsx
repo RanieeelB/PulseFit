@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { userService } from '../services/userService';
 import { User, LogIn, Menu, X, Dumbbell, BarChart2, Utensils, Users, Bell } from 'lucide-react';
+import NotificationDropdown from './NotificationDropdown';
 import logo from '../assets/logopulsefit.png.jpg';
 
 export default function Navbar() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const location = useLocation();
 
     // Simulate active page based on path
@@ -75,12 +78,28 @@ export default function Navbar() {
 
                         {/* User Section */}
                         <div className="flex items-center gap-4">
-                            <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
-                                <Bell size={24} />
-                                {user?.notifications > 0 && (
-                                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-surface-dark"></span>
-                                )}
-                            </button>
+                            <div className="relative">
+                                <button
+                                    className="p-2 text-slate-400 hover:text-white transition-colors relative"
+                                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                                    data-notification-trigger="true"
+                                >
+                                    <Bell size={24} />
+                                    {unreadCount > 0 && (
+                                        <div className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border-2 border-surface-dark flex items-center justify-center pointer-events-none">
+                                            <span className="text-[9px] font-bold text-white leading-none px-1">
+                                                {unreadCount > 9 ? '9+' : unreadCount}
+                                            </span>
+                                        </div>
+                                    )}
+                                </button>
+
+                                <NotificationDropdown
+                                    isOpen={isNotificationOpen}
+                                    onClose={() => setIsNotificationOpen(false)}
+                                    onUnreadCountChange={setUnreadCount}
+                                />
+                            </div>
 
                             {loading ? (
                                 <div className="animate-pulse flex items-center gap-3">

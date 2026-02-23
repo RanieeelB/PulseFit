@@ -176,7 +176,7 @@ export default function Diet() {
         };
 
         return (
-            <div className="min-h-screen bg-background-light dark:bg-background-dark p-4 md:p-6 pb-24 md:pb-10 relative">
+            <div className="min-h-screen bg-background-dark p-4 md:p-6 pb-24 md:pb-10 relative">
                 {/* Background Effects */}
                 <div className="fixed inset-0 z-0 pointer-events-none">
                     <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] mix-blend-screen"></div>
@@ -422,7 +422,7 @@ export default function Diet() {
     // RENDER: ONBOARDING FORM (If no profile)
     // -------------------------------------------------------------------------
     return (
-        <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex flex-col relative overflow-x-hidden">
+        <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col relative overflow-x-hidden">
             {/* Background Effects */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] mix-blend-screen"></div>

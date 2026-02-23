@@ -10,6 +10,18 @@ const defaultProfile = {
 };
 
 export const userService = {
+    async updatePassword(newPassword) {
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) {
+            console.error('Error updating password:', error);
+            throw error;
+        }
+        return true;
+    },
+
     async getProfile() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;

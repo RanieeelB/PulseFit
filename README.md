@@ -8,6 +8,12 @@ O **PulseFit** é a sua plataforma definitiva para gerenciamento de treinos de m
 
 ---
 
+## 📱 Download do Aplicativo (Android)
+Baixe a versão mais recente e instalável para o seu celular Android clicando no link do Google Drive abaixo:
+🔗 **[Baixar PulseFit.apk](https://drive.google.com/drive/folders/1Ie-4WGZ_VHsZ1ZJzSF1sceaLnyX3UT1j?usp=sharing)**
+
+---
+
 ## 🚀 Funcionalidades Principais
 
 ### 💪 **Gerenciamento de Treinos Avançado**
