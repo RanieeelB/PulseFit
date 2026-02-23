@@ -68,7 +68,7 @@ const NotificationDropdown = ({ isOpen, onClose, onUnreadCountChange }) => {
     return (
         <div
             ref={dropdownRef}
-            className="absolute top-14 right-0 w-80 sm:w-96 max-h-[80vh] bg-slate-800/95 dark:bg-[#0f0f12]/95 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden flex flex-col z-[100] animate-slide-up origin-top-right ring-1 ring-white/5"
+            className="fixed top-16 left-4 right-4 sm:absolute sm:top-14 sm:left-auto sm:right-0 w-auto sm:w-80 md:w-96 max-h-[80vh] bg-slate-800/95 dark:bg-[#0f0f12]/95 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden flex flex-col z-[100] animate-slide-up origin-top sm:origin-top-right ring-1 ring-white/5"
             style={{ animationDuration: '0.2s' }}
         >
             <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
