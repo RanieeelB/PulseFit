@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { Plus, Search, Trash2, Save, Dumbbell } from 'lucide-react';
+import { Plus, Search, Trash2, Save, Dumbbell, Sparkles } from 'lucide-react';
 import { iconMap, getIcon } from '../utils/iconMap';
 
 export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
@@ -14,11 +14,19 @@ export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
     const [search, setSearch] = useState('');
     const [muscleFilter, setMuscleFilter] = useState('Todos');
 
+    // Custom exercise creation
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [newExerciseName, setNewExerciseName] = useState('');
+    const [newExerciseMuscleGroup, setNewExerciseMuscleGroup] = useState('Outros');
+    const [isCreating, setIsCreating] = useState(false);
+    const exerciseListRef = useRef(null);
+
     // Mobile Tab State
     const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'workout'
 
     // Drag and Drop & Sort Handlers
     const [draggedItem, setDraggedItem] = useState(null);
+    const exercisesEndRef = useRef(null);
 
     const handleDragStart = (e, index) => {
         setDraggedItem(index);
@@ -84,22 +92,65 @@ export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
     };
 
     const addExercise = (exercise) => {
-        setSelectedExercises([...selectedExercises, {
+        setSelectedExercises(prev => [...prev, {
             ...exercise,
             catalog_id: exercise.id,
-            id: Date.now(), // Temp ID for UI
+            id: Date.now() + Math.random(), // Temp ID for UI
             sets: [{ reps: 10, weight: 0 }]
         }]);
-        // Optional: switch to workout tab on add? maybe not, user might want to add multiple.
-        // toast.success("Exercício adicionado!"); 
+    };
+
+    const handleCreateCustomExercise = async () => {
+        if (!newExerciseName.trim()) return;
+        setIsCreating(true);
+        try {
+            const { data, error } = await supabase
+                .from('exercise_catalog')
+                .insert([{
+                    name: newExerciseName.trim(),
+                    muscle_group: newExerciseMuscleGroup,
+                    equipment: 'Livre',
+                    is_compound: false
+                }])
+                .select();
+
+            if (error || !data || data.length === 0) {
+                console.warn('Could not save custom exercise to catalog (RLS policy). Adding to current workout only.');
+                // Create a temporary mock exercise for this session
+                const tempExercise = {
+                    id: `temp_${Date.now()}`,
+                    name: newExerciseName.trim(),
+                    muscle_group: newExerciseMuscleGroup
+                };
+                addExercise(tempExercise);
+            } else {
+                // Reload catalog and auto-add
+                await loadCatalog();
+                addExercise(data[0]); // data is an array because we removed .single()
+            }
+        } catch (err) {
+            console.error('Error creating custom exercise:', err);
+            // Fallback for current session
+            addExercise({
+                id: `temp_${Date.now()}`,
+                name: newExerciseName.trim(),
+                muscle_group: newExerciseMuscleGroup
+            });
+        } finally {
+            setNewExerciseName('');
+            setNewExerciseMuscleGroup('Outros');
+            setShowCreateForm(false);
+            setSearch('');
+            setIsCreating(false);
+        }
     };
 
     const removeExercise = (index) => {
-        setSelectedExercises(selectedExercises.filter((_, i) => i !== index));
+        setSelectedExercises(prev => prev.filter((_, i) => i !== index));
     };
 
     const updateSet = (exIndex, setIndex, field, value) => {
-        setSelectedExercises(selectedExercises.map((ex, i) => {
+        setSelectedExercises(prev => prev.map((ex, i) => {
             if (i === exIndex) {
                 const newSets = [...ex.sets];
                 newSets[setIndex] = { ...newSets[setIndex], [field]: value };
@@ -110,17 +161,24 @@ export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
     };
 
     const addSet = (exIndex) => {
-        setSelectedExercises(selectedExercises.map((ex, i) => {
+        setSelectedExercises(prev => prev.map((ex, i) => {
             if (i === exIndex) {
                 const previousSet = ex.sets[ex.sets.length - 1];
                 return { ...ex, sets: [...ex.sets, { ...previousSet }] };
             }
             return ex;
         }));
+
+        // Scroll to keep the button visible, especially for the last exercise
+        setTimeout(() => {
+            if (exercisesEndRef.current && exIndex === selectedExercises.length - 1) {
+                exercisesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }, 50);
     };
 
     const removeSet = (exIndex, setIndex) => {
-        setSelectedExercises(selectedExercises.map((ex, i) => {
+        setSelectedExercises(prev => prev.map((ex, i) => {
             if (i === exIndex) {
                 return { ...ex, sets: ex.sets.filter((_, j) => j !== setIndex) };
             }
@@ -242,15 +300,65 @@ export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
                 {/* Catalog Sidebar */}
                 <div className={`w-full md:w-1/3 flex flex-col md:border-r border-slate-100 dark:border-white/5 md:pr-4 h-full ${activeTab === 'catalog' ? 'flex' : 'hidden md:flex'}`}>
                     <div className="mb-4 space-y-3 shrink-0">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                placeholder="Buscar exercício..."
-                                className="w-full bg-slate-100 dark:bg-white/5 pl-10 pr-3 py-3 rounded-xl text-sm text-slate-900 dark:text-white border-none focus:ring-2 focus:ring-primary outline-none"
-                            />
+                        <div className="relative flex gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    placeholder="Buscar exercício..."
+                                    className="w-full bg-slate-100 dark:bg-white/5 pl-10 pr-3 py-3 rounded-xl text-sm text-slate-900 dark:text-white border-none focus:ring-2 focus:ring-primary outline-none"
+                                />
+                            </div>
+                            <button
+                                onClick={() => { setShowCreateForm(!showCreateForm); setNewExerciseName(search); }}
+                                className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all border shrink-0 ${showCreateForm ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:text-primary hover:border-primary/30'}`}
+                                title="Criar exercício personalizado"
+                            >
+                                <Sparkles size={18} />
+                            </button>
                         </div>
+
+                        {/* Custom Exercise Creation Form */}
+                        {showCreateForm && (
+                            <div className="bg-gradient-to-br from-primary/10 to-purple-500/10 p-4 rounded-xl border border-primary/20 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <h4 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                                    <Sparkles size={12} /> Criar Exercício
+                                </h4>
+                                <input
+                                    value={newExerciseName}
+                                    onChange={e => setNewExerciseName(e.target.value)}
+                                    placeholder="Nome do exercício"
+                                    className="w-full bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary"
+                                    autoFocus
+                                />
+                                <select
+                                    value={newExerciseMuscleGroup}
+                                    onChange={e => setNewExerciseMuscleGroup(e.target.value)}
+                                    className="w-full bg-white dark:bg-[#121214] border border-slate-200 dark:border-white/10 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
+                                >
+                                    {muscleGroups.filter(m => m !== 'Todos').map(m => (
+                                        <option key={m} value={m} className="bg-white dark:bg-[#121214] text-slate-900 dark:text-white">{m}</option>
+                                    ))}
+                                    <option value="Outros" className="bg-white dark:bg-[#121214] text-slate-900 dark:text-white">Outros</option>
+                                </select>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowCreateForm(false)}
+                                        className="flex-1 py-2 rounded-lg text-xs font-bold text-slate-500 bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors"
+                                    >Cancelar</button>
+                                    <button
+                                        onClick={handleCreateCustomExercise}
+                                        disabled={isCreating || !newExerciseName.trim()}
+                                        className="flex-1 py-2 rounded-lg text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-1"
+                                    >
+                                        {isCreating ? 'Criando...' : <><Plus size={14} /> Criar e Adicionar</>}
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-slate-500 text-center">Este exercício ficará disponível para todos os usuários</p>
+                            </div>
+                        )}
+
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                             {muscleGroups.map(m => (
                                 <button
@@ -266,8 +374,16 @@ export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
 
                     <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1 pb-20 md:pb-0">
                         {filteredCatalog.length === 0 ? (
-                            <div className="text-center py-10 text-slate-500">
+                            <div className="text-center py-8 text-slate-500 space-y-3">
                                 <p className="text-sm">Nenhum exercício encontrado</p>
+                                {!showCreateForm && (
+                                    <button
+                                        onClick={() => { setShowCreateForm(true); setNewExerciseName(search); }}
+                                        className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-lg border border-primary/20 hover:bg-primary/20 transition-colors flex items-center gap-1.5 mx-auto"
+                                    >
+                                        <Sparkles size={14} /> Criar "{search}"
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             filteredCatalog.map(ex => {
@@ -314,7 +430,7 @@ export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
                         )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1 pb-20 md:pb-0">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1 pb-32 md:pb-24 relative">
                         {selectedExercises.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-50 p-8 text-center">
                                 <Dumbbell size={64} className="mb-4 text-slate-600 dark:text-slate-700" />
@@ -376,6 +492,7 @@ export default function WorkoutBuilder({ onSave, onCancel, initialData }) {
                                 </div>
                             ))
                         )}
+                        <div ref={exercisesEndRef} className="h-4 w-full" />
                     </div>
                 </div>
             </div>

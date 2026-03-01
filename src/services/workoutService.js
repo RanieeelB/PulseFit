@@ -149,6 +149,42 @@ export const workoutService = {
         window.dispatchEvent(new CustomEvent('stats-updated'));
     },
 
+    // Cardio Logs
+    async addCardioLog(cardioType, durationMinutes, calories) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', user.id)
+            .single();
+
+        const { error } = await supabase
+            .from('cardio_logs')
+            .insert([{
+                user_id: user.id,
+                cardio_type: cardioType,
+                duration_minutes: durationMinutes,
+                calories: calories,
+                user_name: profile?.name || 'Atleta PulseFit',
+                completed_at: new Date().toISOString()
+            }]);
+
+        if (error) console.error('Error logging cardio:', error);
+
+        window.dispatchEvent(new CustomEvent('stats-updated'));
+
+        return {
+            duration: durationMinutes,
+            calories: calories,
+            prs: [],
+            improvements: [],
+            cycleCompleted: false,
+            weeklyStats: null
+        };
+    },
+
     async finishWorkout(id, duration, calories, exercisesPerformed) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
@@ -270,22 +306,30 @@ export const workoutService = {
 
     async getWeeklyStats() {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { workouts: 0, minutes: 0, calories: 0 };
+        if (!user) return { workouts: 0, minutes: 0, calories: 0, daysCompleted: [] };
 
         const now = new Date();
         const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
         startOfWeek.setHours(0, 0, 0, 0);
 
-        const { data: logs, error } = await supabase
+        const fetchWorkouts = supabase
             .from('workout_logs')
             .select('duration_minutes, calories, completed_at')
             .eq('user_id', user.id)
             .gte('completed_at', startOfWeek.toISOString());
 
-        if (error) {
-            console.error('Error fetching stats:', error);
-            return { workouts: 0, minutes: 0, calories: 0 };
-        }
+        const fetchCardio = supabase
+            .from('cardio_logs')
+            .select('duration_minutes, calories, completed_at')
+            .eq('user_id', user.id)
+            .gte('completed_at', startOfWeek.toISOString());
+
+        const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
+
+        const logs = [
+            ...(workoutsRes.data || []),
+            ...(cardioRes.data || [])
+        ];
 
         const totalWorkouts = logs.length;
         const totalMinutes = logs.reduce((sum, log) => sum + (log.duration_minutes || 0), 0);
@@ -307,13 +351,26 @@ export const workoutService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return 0;
 
-        const { data: logs, error } = await supabase
+        const fetchWorkouts = supabase
             .from('workout_logs')
             .select('completed_at')
             .eq('user_id', user.id)
             .order('completed_at', { ascending: false });
 
-        if (error || !logs || logs.length === 0) return 0;
+        const fetchCardio = supabase
+            .from('cardio_logs')
+            .select('completed_at')
+            .eq('user_id', user.id)
+            .order('completed_at', { ascending: false });
+
+        const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
+
+        const logs = [
+            ...(workoutsRes.data || []),
+            ...(cardioRes.data || [])
+        ].sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+        if (!logs || logs.length === 0) return 0;
 
         // Get unique dates
         const uniqueDates = [...new Set(logs.map(log =>
@@ -360,13 +417,26 @@ export const workoutService = {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-        const { data: logs, error } = await supabase
+        const fetchWorkouts = supabase
             .from('workout_logs')
             .select('completed_at')
             .eq('user_id', user.id)
             .gte('completed_at', startOfMonth.toISOString());
 
-        if (error || !logs) return 0;
+        const fetchCardio = supabase
+            .from('cardio_logs')
+            .select('completed_at')
+            .eq('user_id', user.id)
+            .gte('completed_at', startOfMonth.toISOString());
+
+        const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
+
+        const logs = [
+            ...(workoutsRes.data || []),
+            ...(cardioRes.data || [])
+        ];
+
+        if (!logs || logs.length === 0) return 0;
 
         // Count unique days with workouts
         const uniqueDays = new Set(logs.map(log =>
@@ -397,14 +467,26 @@ export const workoutService = {
             startDate = new Date(startDate.getFullYear(), 0, 1);
         }
 
-        const { data: logs, error } = await supabase
+        const fetchWorkouts = supabase
             .from('workout_logs')
             .select('completed_at')
             .eq('user_id', user.id)
             .gte('completed_at', startDate.toISOString())
             .order('completed_at', { ascending: true });
 
-        if (error) return [];
+        const fetchCardio = supabase
+            .from('cardio_logs')
+            .select('completed_at')
+            .eq('user_id', user.id)
+            .gte('completed_at', startDate.toISOString())
+            .order('completed_at', { ascending: true });
+
+        const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
+
+        const logs = [
+            ...(workoutsRes.data || []),
+            ...(cardioRes.data || [])
+        ].sort((a, b) => new Date(a.completed_at) - new Date(b.completed_at));
 
         if (period === 'week') {
             // Map logs to days of week (Mon, Tue...) including counts
@@ -591,12 +673,23 @@ export const workoutService = {
             last7Days.setDate(last7Days.getDate() - 7);
 
             // Fetch logs first (most resilient)
-            const { data: logs, error: logsError } = await supabase
+            const fetchWorkouts = supabase
                 .from('workout_logs')
                 .select('user_id, user_name, completed_at')
                 .gte('completed_at', last7Days.toISOString());
 
-            if (logsError) throw logsError;
+            const fetchCardio = supabase
+                .from('cardio_logs')
+                .select('user_id, user_name, completed_at')
+                .gte('completed_at', last7Days.toISOString());
+
+            const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
+
+            const logs = [
+                ...(workoutsRes.data || []),
+                ...(cardioRes.data || [])
+            ];
+
             if (!logs || logs.length === 0) return [];
 
             // Group by user and count

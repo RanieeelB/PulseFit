@@ -8,6 +8,7 @@ import Social from './pages/Social';
 import AuthModal from './components/AuthModal';
 import ProfileModal from './components/ProfileModal';
 import WorkoutManagerModal from './components/WorkoutManagerModal';
+import CardioModal from './components/CardioModal';
 
 import { supabase } from './services/supabaseClient';
 import { useEffect } from 'react';
@@ -54,6 +55,7 @@ function App() {
                 <AuthModal />
                 <ProfileModal />
                 <WorkoutManagerModal />
+                <CardioModal />
             </div>
         </Router>
     );

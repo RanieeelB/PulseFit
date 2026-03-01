@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import WorkoutDetailsModal from '../components/WorkoutDetailsModal';
 import { workoutService } from '../services/workoutService';
 import { getRandomTip } from '../utils/tips';
-import { Plus, CheckCircle, PlayCircle, Clock, Moon, Flame, Zap, Activity, TrendingUp, Calendar } from 'lucide-react';
+import { Plus, CheckCircle, PlayCircle, Clock, Moon, Flame, Zap, Activity, TrendingUp, Calendar, Timer } from 'lucide-react';
 import { getIcon, emojiToIconMap } from '../utils/iconMap';
 import Leaderboard from '../components/Leaderboard';
 
@@ -132,6 +132,28 @@ export default function Home() {
                             <p className="text-slate-500 max-w-sm">Você ainda não tem treinos criados. Use o botão acima para criar sua primeira rotina.</p>
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Cardio Section */}
+            <div className="w-full relative group cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('open-cardio-modal'))}>
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-rose-500/20 rounded-3xl blur-xl group-hover:opacity-100 opacity-50 transition-opacity duration-500"></div>
+                <div className="relative bg-[#0A0A0B] border border-orange-500/20 hover:border-orange-500/40 p-5 md:p-6 rounded-3xl flex items-center justify-between overflow-hidden transition-all group-hover:shadow-2xl group-hover:shadow-orange-500/20 group-hover:-translate-y-1">
+                    <div className="absolute top-0 right-0 p-4 opacity-5">
+                        <Timer size={100} />
+                    </div>
+                    <div className="flex items-center gap-4 relative z-10 w-full">
+                        <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 shrink-0 group-hover:scale-110 transition-transform">
+                            <Activity className="text-white" size={24} />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-black text-white uppercase tracking-wide group-hover:text-orange-400 transition-colors">Fazer Cardio</h3>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">Corrida, Caminhada, Bike e mais</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                            <PlayCircle size={20} className="text-slate-400 group-hover:text-orange-400" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
