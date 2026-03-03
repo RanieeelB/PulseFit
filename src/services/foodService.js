@@ -320,7 +320,7 @@ export const foodService = {
         }
     },
 
-    async copyPreviousDayLogs(targetDate) {
+    async copyPreviousDayLogs(targetDate, mealType = null) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
@@ -331,22 +331,30 @@ export const foodService = {
             prev.setDate(prev.getDate() - 1);
             const prevDateStr = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}`;
 
-            // Fetch previous day logs
-            const { data: prevLogs, error: prevError } = await supabase
+            // Fetch previous day logs (filtered by meal type if provided)
+            let query = supabase
                 .from('food_log')
                 .select('food_id, meal_type, quantity_grams')
                 .eq('user_id', user.id)
                 .eq('date', prevDateStr);
 
+            if (mealType) query = query.eq('meal_type', mealType);
+
+            const { data: prevLogs, error: prevError } = await query;
+
             if (prevError) throw prevError;
-            if (!prevLogs || prevLogs.length === 0) return { copied: 0, message: 'Nenhuma refeição encontrada no dia anterior.' };
+            if (!prevLogs || prevLogs.length === 0) return { copied: 0, message: 'Nenhum alimento encontrado no dia anterior.' };
 
             // Check existing entries for target date to prevent duplicates
-            const { data: existingLogs, error: existError } = await supabase
+            let existQuery = supabase
                 .from('food_log')
                 .select('food_id, meal_type')
                 .eq('user_id', user.id)
                 .eq('date', targetDate);
+
+            if (mealType) existQuery = existQuery.eq('meal_type', mealType);
+
+            const { data: existingLogs, error: existError } = await existQuery;
 
             if (existError) throw existError;
 
@@ -363,7 +371,7 @@ export const foodService = {
                     date: targetDate
                 }));
 
-            if (newEntries.length === 0) return { copied: 0, message: 'Todas as refeições já existem no dia atual.' };
+            if (newEntries.length === 0) return { copied: 0, message: 'Alimentos já existem no dia atual.' };
 
             const { error: insertError } = await supabase
                 .from('food_log')
@@ -371,7 +379,7 @@ export const foodService = {
 
             if (insertError) throw insertError;
 
-            return { copied: newEntries.length, message: `${newEntries.length} ${newEntries.length === 1 ? 'alimento copiado' : 'alimentos copiados'} com sucesso!` };
+            return { copied: newEntries.length, message: `${newEntries.length} ${newEntries.length === 1 ? 'alimento copiado' : 'alimentos copiados'}!` };
         } catch (error) {
             console.error('Error copying previous day logs:', error);
             throw error;
