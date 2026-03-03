@@ -205,7 +205,7 @@ const AddFoodModal = ({ isOpen, onClose, mealType, onFoodAdded }) => {
             <div className="relative w-full max-w-5xl bg-[#09090b] border border-[#27272a] rounded-[32px] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh] animate-in fade-in zoom-in-95 duration-300">
 
                 {/* LEFT PANEL: Search & List */}
-                <div className={`flex-1 flex flex-col min-w-0 bg-[#09090b] ${selectedFood ? 'hidden md:flex' : 'flex'}`}>
+                <div className={`flex-1 flex flex-col min-w-0 min-h-0 bg-[#09090b] ${selectedFood ? 'hidden md:flex' : 'flex'}`}>
                     {/* Header */}
                     <div className="p-5 border-b border-[#27272a]/50">
                         <div className="flex justify-between items-center mb-5">
