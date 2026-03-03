@@ -9,7 +9,7 @@ import Leaderboard from '../components/Leaderboard';
 export default function Home() {
     const [workouts, setWorkouts] = useState([]);
     const [stats, setStats] = useState({ workouts: 0, minutes: 0, calories: 0 });
-    const [streak, setStreak] = useState(0);
+    const [streak, setStreak] = useState({ current: 0, best: 0 });
     const [performance, setPerformance] = useState(0);
     const [tip, setTip] = useState('');
     const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ export default function Home() {
             ]);
             setWorkouts(wData || []);
             setStats(sData || { workouts: 0, minutes: 0, calories: 0 });
-            setStreak(streakData);
+            setStreak(streakData || { current: 0, best: 0 });
             setPerformance(perfData);
         } catch (error) {
             console.error(error);
@@ -93,9 +93,12 @@ export default function Home() {
                         <Zap className="text-yellow-400" size={20} />
                     </div>
                     <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 relative z-10 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">
-                        {streak}
+                        {streak.current}
                     </span>
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 relative z-10">Dias Streak</span>
+                    {streak.best > 0 && (
+                        <span className="text-[9px] font-bold text-yellow-500/60 mt-1 relative z-10">🏆 Recorde: {streak.best} dias</span>
+                    )}
                 </div>
             </div>
 

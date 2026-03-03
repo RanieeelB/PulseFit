@@ -349,7 +349,7 @@ export const workoutService = {
     // Stats: Streak & Performance
     async getStreak() {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return 0;
+        if (!user) return { current: 0, best: 0 };
 
         const fetchWorkouts = supabase
             .from('workout_logs')
@@ -370,7 +370,14 @@ export const workoutService = {
             ...(cardioRes.data || [])
         ].sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
 
-        if (!logs || logs.length === 0) return 0;
+        // Get rest days from localStorage
+        const restDaysRaw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        const restDays = restDaysRaw ? JSON.parse(restDaysRaw) : [];
+
+        if (!logs || logs.length === 0) {
+            const savedBest = parseInt(localStorage.getItem(`pulsefit_streak_best_${user.id}`)) || 0;
+            return { current: 0, best: savedBest };
+        }
 
         // Get unique dates
         const uniqueDates = [...new Set(logs.map(log =>
@@ -383,30 +390,38 @@ export const workoutService = {
 
         // Check if streak is active (has log today or yesterday)
         if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) {
-            return 0;
+            const savedBest = parseInt(localStorage.getItem(`pulsefit_streak_best_${user.id}`)) || 0;
+            return { current: 0, best: savedBest };
         }
 
-        // Iterate backwards
+        // Iterate backwards counting consecutive days (skipping rest days)
         let currentDate = new Date();
-        // If the latest log is today, start checking from today
-        // If it was yesterday, start checking from yesterday
         if (uniqueDates[0] !== today) {
             currentDate.setDate(currentDate.getDate() - 1);
         }
 
-        for (let i = 0; i < uniqueDates.length; i++) {
+        for (let i = 0; i < 365; i++) { // max 1 year lookback
             const checkDate = currentDate.toISOString().split('T')[0];
 
-            // If the log date matches the check date, increment streak and move check date back
             if (uniqueDates.includes(checkDate)) {
                 streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else if (restDays.includes(checkDate)) {
+                // Rest day: skip but don't break streak
                 currentDate.setDate(currentDate.getDate() - 1);
             } else {
                 break;
             }
         }
 
-        return streak;
+        // Update personal best
+        const savedBest = parseInt(localStorage.getItem(`pulsefit_streak_best_${user.id}`)) || 0;
+        const best = Math.max(savedBest, streak);
+        if (best > savedBest) {
+            localStorage.setItem(`pulsefit_streak_best_${user.id}`, best.toString());
+        }
+
+        return { current: streak, best };
     },
 
     async getMonthlyPerformance() {
