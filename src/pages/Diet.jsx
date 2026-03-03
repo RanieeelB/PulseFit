@@ -19,7 +19,9 @@ import {
     Plus,
     Trash2,
     Settings,
-    Pencil
+    Pencil,
+    Copy,
+    Check
 } from 'lucide-react';
 
 export default function Diet() {
@@ -31,6 +33,8 @@ export default function Diet() {
     const [selectedMeal, setSelectedMeal] = useState(null);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(getLocalDate());
+    const [copyToast, setCopyToast] = useState(null);
+    const [copying, setCopying] = useState(false);
 
     const isToday = selectedDate === getLocalDate();
 
@@ -123,6 +127,23 @@ export default function Diet() {
         setModalOpen(true);
     };
 
+    const handleCopyPreviousDay = async () => {
+        setCopying(true);
+        try {
+            const result = await foodService.copyPreviousDayLogs(selectedDate);
+            setCopyToast(result.message);
+            if (result.copied > 0) {
+                await fetchFoodLogs(selectedDate);
+            }
+            setTimeout(() => setCopyToast(null), 3000);
+        } catch (err) {
+            setCopyToast('Erro ao copiar refeições.');
+            setTimeout(() => setCopyToast(null), 3000);
+        } finally {
+            setCopying(false);
+        }
+    };
+
     const handleRemoveLog = async (id) => {
         if (window.confirm('Remover este alimento?')) {
             await foodService.deleteFoodLog(id);
@@ -206,6 +227,24 @@ export default function Diet() {
 
                     {/* Day Selector */}
                     <DaySelector selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+
+                    {/* Copy Previous Day + Toast */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleCopyPreviousDay}
+                            disabled={copying}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-[#121218] border border-white/5 rounded-xl text-xs font-bold text-slate-400 hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {copying ? <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-slate-600 border-t-primary" /> : <Copy size={14} />}
+                            Copiar do dia anterior
+                        </button>
+                        {copyToast && (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs font-bold text-emerald-400 animate-in fade-in slide-in-from-left-2 duration-300">
+                                <Check size={14} />
+                                {copyToast}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Macro Summary Card */}
                     <div className="bg-[#121218] rounded-3xl p-6 relative overflow-hidden border border-[#27272a] shadow-2xl relative group">
