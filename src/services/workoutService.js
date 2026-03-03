@@ -755,5 +755,90 @@ export const workoutService = {
             console.error('Error calculating leaderboard:', error);
             return { ranked: [], currentUserId: null };
         }
+    },
+
+    // -------------------------------------------------------------------------
+    // REST DAYS (Max 2 per week, stored in localStorage)
+    // -------------------------------------------------------------------------
+
+    async getRestDays() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+        const raw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        return raw ? JSON.parse(raw) : [];
+    },
+
+    async getRestDaysThisWeek() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { days: [], count: 0 };
+        const raw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        const allDays = raw ? JSON.parse(raw) : [];
+
+        // Get current week (Monday to Sunday)
+        const now = new Date();
+        const dayOfWeek = now.getDay() || 7; // Convert Sunday (0) to 7
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - dayOfWeek + 1);
+        monday.setHours(0, 0, 0, 0);
+        const mondayStr = monday.toISOString().split('T')[0];
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const sundayStr = sunday.toISOString().split('T')[0];
+
+        const thisWeek = allDays.filter(d => d >= mondayStr && d <= sundayStr);
+        return { days: thisWeek, count: thisWeek.length };
+    },
+
+    async markRestDay(date) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { success: false, message: 'Usuário não autenticado.' };
+
+        const key = `pulsefit_rest_days_${user.id}`;
+        const raw = localStorage.getItem(key);
+        const allDays = raw ? JSON.parse(raw) : [];
+
+        if (allDays.includes(date)) return { success: false, message: 'Dia já marcado como descanso.' };
+
+        // Check weekly limit
+        const weekInfo = await this.getRestDaysThisWeek();
+        // Only count limit for dates in the same week
+        const now = new Date();
+        const dayOfWeek = now.getDay() || 7;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - dayOfWeek + 1);
+        monday.setHours(0, 0, 0, 0);
+        const mondayStr = monday.toISOString().split('T')[0];
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const sundayStr = sunday.toISOString().split('T')[0];
+
+        if (date >= mondayStr && date <= sundayStr && weekInfo.count >= 2) {
+            return { success: false, message: 'Limite de 2 dias de descanso por semana atingido.' };
+        }
+
+        allDays.push(date);
+        localStorage.setItem(key, JSON.stringify(allDays));
+        return { success: true, message: 'Dia de descanso registrado!' };
+    },
+
+    async unmarkRestDay(date) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+
+        const key = `pulsefit_rest_days_${user.id}`;
+        const raw = localStorage.getItem(key);
+        const allDays = raw ? JSON.parse(raw) : [];
+        const updated = allDays.filter(d => d !== date);
+        localStorage.setItem(key, JSON.stringify(updated));
+        return true;
+    },
+
+    async isRestDay(date) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        const raw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        const allDays = raw ? JSON.parse(raw) : [];
+        return allDays.includes(date);
     }
 };

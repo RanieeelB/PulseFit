@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import WorkoutDetailsModal from '../components/WorkoutDetailsModal';
 import { workoutService } from '../services/workoutService';
 import { getRandomTip } from '../utils/tips';
+import { getLocalDate } from '../utils/dateUtils';
 import { Plus, CheckCircle, PlayCircle, Clock, Moon, Flame, Zap, Activity, TrendingUp, Calendar, Timer } from 'lucide-react';
 import { getIcon, emojiToIconMap } from '../utils/iconMap';
 import Leaderboard from '../components/Leaderboard';
@@ -15,6 +16,9 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [selectedWorkout, setSelectedWorkout] = useState(null);
     const [activeTheme, setActiveTheme] = useState(null);
+    const [restDayInfo, setRestDayInfo] = useState({ days: [], count: 0 });
+    const [todayRestDay, setTodayRestDay] = useState(false);
+    const today = getLocalDate();
 
     const loadData = async () => {
         try {
@@ -35,8 +39,16 @@ export default function Home() {
         }
     };
 
+    const loadRestDayData = async () => {
+        const info = await workoutService.getRestDaysThisWeek();
+        setRestDayInfo(info);
+        const isRest = await workoutService.isRestDay(today);
+        setTodayRestDay(isRest);
+    };
+
     useEffect(() => {
         loadData();
+        loadRestDayData();
         setTip(getRandomTip());
 
         const handleUpdate = () => loadData();
@@ -100,6 +112,46 @@ export default function Home() {
                         <span className="text-[9px] font-bold text-yellow-500/60 mt-1 relative z-10">🏆 Recorde: {streak.best} dias</span>
                     )}
                 </div>
+            </div>
+
+            {/* Rest Day Toggle */}
+            <div className="w-full">
+                <button
+                    onClick={async () => {
+                        if (todayRestDay) {
+                            await workoutService.unmarkRestDay(today);
+                        } else {
+                            const result = await workoutService.markRestDay(today);
+                            if (!result.success) {
+                                alert(result.message);
+                                return;
+                            }
+                        }
+                        await loadRestDayData();
+                        loadData();
+                    }}
+                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all duration-300 ${todayRestDay
+                            ? 'bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                            : 'bg-[#0A0A0B] border-white/5 hover:border-blue-500/20 hover:bg-blue-500/5'
+                        }`}
+                >
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-xl transition-colors ${todayRestDay ? 'bg-blue-500/20' : 'bg-white/5'}`}>
+                            <Moon size={18} className={todayRestDay ? 'text-blue-400' : 'text-slate-500'} />
+                        </div>
+                        <div className="text-left">
+                            <span className={`text-sm font-bold ${todayRestDay ? 'text-blue-400' : 'text-slate-300'}`}>
+                                {todayRestDay ? 'Hoje é dia de descanso' : 'Marcar dia de descanso'}
+                            </span>
+                            <span className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mt-0.5">
+                                {restDayInfo.count}/2 usados esta semana
+                            </span>
+                        </div>
+                    </div>
+                    <div className={`w-10 h-6 rounded-full relative transition-colors duration-300 ${todayRestDay ? 'bg-blue-500' : 'bg-white/10'}`}>
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${todayRestDay ? 'translate-x-5' : 'translate-x-1'}`}></div>
+                    </div>
+                </button>
             </div>
 
 
