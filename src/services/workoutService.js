@@ -728,13 +728,17 @@ export const workoutService = {
             }
 
             // Sort and take top 5
-            return Object.values(userStats)
+            const ranked = Object.entries(userStats)
+                .map(([uid, stats]) => ({ ...stats, user_id: uid }))
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 5);
 
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            return { ranked, currentUserId: currentUser?.id || null };
+
         } catch (error) {
             console.error('Error calculating leaderboard:', error);
-            return [];
+            return { ranked: [], currentUserId: null };
         }
     }
 };

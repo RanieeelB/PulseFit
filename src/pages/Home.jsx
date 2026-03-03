@@ -99,8 +99,7 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Leaderboard */}
-            <Leaderboard />
+
 
             {/* Workout Grid */}
             <div className="space-y-6">
@@ -162,6 +161,9 @@ export default function Home() {
                 <WeeklyProgressCard stats={stats} />
                 <PerformanceChart percentage={performance} />
             </div>
+
+            {/* Leaderboard */}
+            <Leaderboard />
 
             {/* Tip of the Day */}
             <TipCard tip={tip} />
