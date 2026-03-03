@@ -141,7 +141,7 @@ const WeeklyCompletedModal = ({ stats, onClose }) => {
                             <Zap size={20} className="text-yellow-400 fill-yellow-400" /> Dias de Streak
                         </div>
                         <div className="text-4xl lg:text-5xl font-bold text-white group-hover:text-yellow-400 transition-colors tracking-tight mt-1">
-                            {stats.streak || 0}<span className="text-lg text-slate-500 ml-1 font-medium">dias</span>
+                            {(typeof stats.streak === 'object' ? stats.streak?.current : stats.streak) || 0}<span className="text-lg text-slate-500 ml-1 font-medium">dias</span>
                         </div>
                     </div>
 

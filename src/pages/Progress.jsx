@@ -207,9 +207,9 @@ export default function Progress() {
             ]);
 
             setStats({
-                streak: streakData,
+                streak: streakData?.current ?? streakData ?? 0,
                 performance: perfData,
-                maxStreak: streakData
+                maxStreak: streakData?.best ?? streakData ?? 0
             });
             setFrequency(freqData);
             setWeightHistory(weightData.map(d => ({
