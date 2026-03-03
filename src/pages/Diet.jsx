@@ -361,9 +361,10 @@ export default function Diet() {
                                                 <button
                                                     onClick={() => handleCopyPreviousDay(meal)}
                                                     disabled={copying}
-                                                    className="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50" title="Copiar do dia anterior"
+                                                    className="flex items-center gap-1 px-2.5 py-1.5 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all disabled:opacity-50 text-[10px] font-bold" title="Copiar do dia anterior"
                                                 >
-                                                    <Copy size={15} />
+                                                    <Copy size={13} />
+                                                    <span className="hidden sm:inline">Copiar</span> ontem
                                                 </button>
                                                 {isToday && (
                                                     <button
