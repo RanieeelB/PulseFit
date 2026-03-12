@@ -322,6 +322,7 @@ export const workoutService = {
             .from('cardio_logs')
             .select('duration_minutes, calories, completed_at')
             .eq('user_id', user.id)
+            .neq('cardio_type', 'Descanso')
             .gte('completed_at', startOfWeek.toISOString());
 
         const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
@@ -394,7 +395,7 @@ export const workoutService = {
             return { current: 0, best: savedBest };
         }
 
-        // Iterate backwards counting consecutive days (skipping rest days)
+        // Iterate backwards counting consecutive days (skipping rest days historically stored)
         let currentDate = new Date();
         if (uniqueDates[0] !== today) {
             currentDate.setDate(currentDate.getDate() - 1);
@@ -404,10 +405,12 @@ export const workoutService = {
             const checkDate = currentDate.toISOString().split('T')[0];
 
             if (uniqueDates.includes(checkDate)) {
+                // Now that "Descanso" is in the database, it will automatically hit this condition!
                 streak++;
                 currentDate.setDate(currentDate.getDate() - 1);
             } else if (restDays.includes(checkDate)) {
-                // Rest day: skip but don't break streak
+                // Legacy: Rest day historically saved in localStorage without a DB log
+                // Also skip but don't break streak for backward compatibility.
                 currentDate.setDate(currentDate.getDate() - 1);
             } else {
                 break;
@@ -442,6 +445,7 @@ export const workoutService = {
             .from('cardio_logs')
             .select('completed_at')
             .eq('user_id', user.id)
+            .neq('cardio_type', 'Descanso')
             .gte('completed_at', startOfMonth.toISOString());
 
         const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
@@ -493,6 +497,7 @@ export const workoutService = {
             .from('cardio_logs')
             .select('completed_at')
             .eq('user_id', user.id)
+            .neq('cardio_type', 'Descanso')
             .gte('completed_at', startDate.toISOString())
             .order('completed_at', { ascending: true });
 
@@ -696,6 +701,7 @@ export const workoutService = {
             const fetchCardio = supabase
                 .from('cardio_logs')
                 .select('user_id, user_name, completed_at')
+                .neq('cardio_type', 'Descanso')
                 .gte('completed_at', last7Days.toISOString());
 
             const [workoutsRes, cardioRes] = await Promise.all([fetchWorkouts, fetchCardio]);
@@ -819,6 +825,10 @@ export const workoutService = {
 
         allDays.push(date);
         localStorage.setItem(key, JSON.stringify(allDays));
+
+        // Insert into cardio_logs to ensure it counts for streaks
+        await this.addCardioLog('Descanso', 0, 0);
+
         return { success: true, message: 'Dia de descanso registrado!' };
     },
 
@@ -831,6 +841,21 @@ export const workoutService = {
         const allDays = raw ? JSON.parse(raw) : [];
         const updated = allDays.filter(d => d !== date);
         localStorage.setItem(key, JSON.stringify(updated));
+
+        // Attempt to remove the corresponding cardio_log for today if we are unmarking today
+        // We match by 'Descanso' and date prefix
+        try {
+            const { data: logs } = await supabase.from('cardio_logs').select('id, completed_at').eq('user_id', user.id).eq('cardio_type', 'Descanso');
+            if (logs && logs.length > 0) {
+                const targetLog = logs.find(l => l.completed_at.startsWith(date));
+                if (targetLog) {
+                    await supabase.from('cardio_logs').delete().eq('id', targetLog.id);
+                }
+            }
+        } catch (e) {
+            console.error("Error unmarking rest day in DB:", e);
+        }
+
         return true;
     },
 

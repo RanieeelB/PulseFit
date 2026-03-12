@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, ScanBarcode, Plus, Minus, ChevronRight, Flame, Heart, ArrowRight, Utensils, Zap, Droplet, Sparkles, Check } from 'lucide-react';
 import { foodService } from '../services/foodService';
+import { getLocalDate } from '../utils/dateUtils';
 
 const AddFoodModal = ({ isOpen, onClose, mealType, onFoodAdded }) => {
     const [query, setQuery] = useState('');
@@ -139,7 +140,7 @@ const AddFoodModal = ({ isOpen, onClose, mealType, onFoodAdded }) => {
                 foodId: selectedFood.id,
                 mealType: mealType,
                 quantityGrams: portion,
-                date: new Date().toISOString().split('T')[0]
+                date: getLocalDate()
             };
             await foodService.addFoodLog(entry);
             onFoodAdded();

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Flame, TrendingDown, TrendingUp, Plus, Calendar, Trophy, Activity, ArrowUp, ArrowDown, Edit2, Trash2, X } from 'lucide-react';
 import { workoutService } from '../services/workoutService';
 import { userService } from '../services/userService';
+import { getLocalDate } from '../utils/dateUtils';
 
 // Improved Chart with Bezier Curves and Interaction
 const EnhancedLineChart = ({ data, color, onPointClick }) => {
@@ -226,7 +227,7 @@ export default function Progress() {
     };
 
     const openAddWeight = () => {
-        setWeightForm({ id: null, weight: '', date: new Date().toISOString().split('T')[0] });
+        setWeightForm({ id: null, weight: '', date: getLocalDate() });
         setIsEditing(false);
         setShowWeightModal(true);
     };
