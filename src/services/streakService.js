@@ -1,4 +1,10 @@
-const STREAK_KEY = 'pulsefit_streak_v1';
+const STREAK_KEY = 'crescefit_streak_v1';
+const PREV_STREAK_KEY = 'pulsefit_streak_v1';
+
+// Direct migration on load
+if (localStorage.getItem(PREV_STREAK_KEY) && !localStorage.getItem(STREAK_KEY)) {
+    localStorage.setItem(STREAK_KEY, localStorage.getItem(PREV_STREAK_KEY));
+}
 
 export const streakService = {
     getStreak() {

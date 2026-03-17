@@ -1,7 +1,13 @@
 
 import { supabase } from './supabaseClient.js';
 
-const DIET_PROFILE_KEY = 'pulsefit_diet_profile';
+const DIET_PROFILE_KEY = 'crescefit_diet_profile';
+const PREV_DIET_PROFILE_KEY = 'pulsefit_diet_profile';
+
+// Direct migration on load
+if (localStorage.getItem(PREV_DIET_PROFILE_KEY) && !localStorage.getItem(DIET_PROFILE_KEY)) {
+    localStorage.setItem(DIET_PROFILE_KEY, localStorage.getItem(PREV_DIET_PROFILE_KEY));
+}
 
 export const MEAL_DISTRIBUTION = {
     breakfast: { label: 'Café da Manhã', percent: 0.25, icon: 'wb_twilight' },

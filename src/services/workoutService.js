@@ -141,7 +141,7 @@ export const workoutService = {
                 workout_id: workoutId,
                 duration_minutes: durationMinutes,
                 calories: calories,
-                user_name: profile?.name || 'Atleta PulseFit',
+                user_name: profile?.name || 'Atleta CresceFit',
                 completed_at: new Date().toISOString()
             }]);
 
@@ -167,7 +167,7 @@ export const workoutService = {
                 cardio_type: cardioType,
                 duration_minutes: durationMinutes,
                 calories: calories,
-                user_name: profile?.name || 'Atleta PulseFit',
+                user_name: profile?.name || 'Atleta CresceFit',
                 completed_at: new Date().toISOString()
             }]);
 
@@ -372,11 +372,24 @@ export const workoutService = {
         ].sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
 
         // Get rest days from localStorage
-        const restDaysRaw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        // Migration check
+        const prevKey = `pulsefit_rest_days_${user.id}`;
+        const newKey = `crescefit_rest_days_${user.id}`;
+        if (localStorage.getItem(prevKey) && !localStorage.getItem(newKey)) {
+            localStorage.setItem(newKey, localStorage.getItem(prevKey));
+        }
+
+        const restDaysRaw = localStorage.getItem(newKey);
         const restDays = restDaysRaw ? JSON.parse(restDaysRaw) : [];
 
+        const prevBestKey = `pulsefit_streak_best_${user.id}`;
+        const newBestKey = `crescefit_streak_best_${user.id}`;
+        if (localStorage.getItem(prevBestKey) && !localStorage.getItem(newBestKey)) {
+            localStorage.setItem(newBestKey, localStorage.getItem(prevBestKey));
+        }
+
         if (!logs || logs.length === 0) {
-            const savedBest = parseInt(localStorage.getItem(`pulsefit_streak_best_${user.id}`)) || 0;
+            const savedBest = parseInt(localStorage.getItem(newBestKey)) || 0;
             return { current: 0, best: savedBest };
         }
 
@@ -391,7 +404,7 @@ export const workoutService = {
 
         // Check if streak is active (has log today or yesterday)
         if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) {
-            const savedBest = parseInt(localStorage.getItem(`pulsefit_streak_best_${user.id}`)) || 0;
+            const savedBest = parseInt(localStorage.getItem(`crescefit_streak_best_${user.id}`)) || 0;
             return { current: 0, best: savedBest };
         }
 
@@ -418,10 +431,10 @@ export const workoutService = {
         }
 
         // Update personal best
-        const savedBest = parseInt(localStorage.getItem(`pulsefit_streak_best_${user.id}`)) || 0;
+        const savedBest = parseInt(localStorage.getItem(`crescefit_streak_best_${user.id}`)) || 0;
         const best = Math.max(savedBest, streak);
         if (best > savedBest) {
-            localStorage.setItem(`pulsefit_streak_best_${user.id}`, best.toString());
+            localStorage.setItem(`crescefit_streak_best_${user.id}`, best.toString());
         }
 
         return { current: streak, best };
@@ -721,7 +734,7 @@ export const workoutService = {
                 const uid = log.user_id;
                 if (!userStats[uid]) {
                     userStats[uid] = {
-                        name: log.user_name || 'Atleta PulseFit',
+                        name: log.user_name || 'Atleta CresceFit',
                         avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
                         count: 0
                     };
@@ -740,7 +753,7 @@ export const workoutService = {
                 profiles.forEach(p => {
                     if (userStats[p.id]) {
                         // Priority: use log name if exists, fallback to profile name
-                        if (!userStats[p.id].name || userStats[p.id].name === 'Atleta PulseFit') {
+                        if (!userStats[p.id].name || userStats[p.id].name === 'Atleta CresceFit') {
                             userStats[p.id].name = p.name;
                         }
                         userStats[p.id].avatar = p.avatar || userStats[p.id].avatar;
@@ -770,14 +783,14 @@ export const workoutService = {
     async getRestDays() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
-        const raw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        const raw = localStorage.getItem(`crescefit_rest_days_${user.id}`);
         return raw ? JSON.parse(raw) : [];
     },
 
     async getRestDaysThisWeek() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { days: [], count: 0 };
-        const raw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        const raw = localStorage.getItem(`crescefit_rest_days_${user.id}`);
         const allDays = raw ? JSON.parse(raw) : [];
 
         // Get current week (Monday to Sunday)
@@ -800,7 +813,7 @@ export const workoutService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, message: 'Usuário não autenticado.' };
 
-        const key = `pulsefit_rest_days_${user.id}`;
+        const key = `crescefit_rest_days_${user.id}`;
         const raw = localStorage.getItem(key);
         const allDays = raw ? JSON.parse(raw) : [];
 
@@ -836,7 +849,7 @@ export const workoutService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return false;
 
-        const key = `pulsefit_rest_days_${user.id}`;
+        const key = `crescefit_rest_days_${user.id}`;
         const raw = localStorage.getItem(key);
         const allDays = raw ? JSON.parse(raw) : [];
         const updated = allDays.filter(d => d !== date);
@@ -862,7 +875,7 @@ export const workoutService = {
     async isRestDay(date) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return false;
-        const raw = localStorage.getItem(`pulsefit_rest_days_${user.id}`);
+        const raw = localStorage.getItem(`crescefit_rest_days_${user.id}`);
         const allDays = raw ? JSON.parse(raw) : [];
         return allDays.includes(date);
     }

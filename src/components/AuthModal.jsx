@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logopulsefit.png.jpg';
+import logo from '../assets/CresceFitLogo.svg';
 
 export default function AuthModal() {
     const dialogRef = useRef(null);
@@ -73,7 +73,7 @@ export default function AuthModal() {
 
                     {/* Header */}
                     <div className="text-center mb-8 relative z-10">
-                        <img src={logo} alt="PulseFit" className="h-14 w-auto mx-auto mb-4" />
+                        <img src={logo} alt="CresceFit" className="h-14 w-auto mx-auto mb-4 drop-shadow-[0_0_15px_rgba(91,19,236,0.3)]" />
                         <p className="text-slate-500 text-sm mt-1 font-medium">Faça login para continuar</p>
                     </div>
 

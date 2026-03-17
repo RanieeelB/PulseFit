@@ -131,8 +131,8 @@ export default function Home() {
                         loadData();
                     }}
                     className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all duration-300 ${todayRestDay
-                            ? 'bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-                            : 'bg-[#0A0A0B] border-white/5 hover:border-blue-500/20 hover:bg-blue-500/5'
+                        ? 'bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                        : 'bg-[#0A0A0B] border-white/5 hover:border-blue-500/20 hover:bg-blue-500/5'
                         }`}
                 >
                     <div className="flex items-center gap-3">

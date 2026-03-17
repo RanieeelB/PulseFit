@@ -229,7 +229,7 @@ const WeeklyCompletedModal = ({ stats, onClose }) => {
                             <span className="font-black text-white tracking-wide uppercase text-lg">Continuar Evoluindo</span>
                         </div>
                     </button>
-                    <p className="mt-6 text-xs text-slate-500/50 font-mono">PulseFit v2.4.0 • Stats updated just now</p>
+                    <p className="mt-6 text-xs text-slate-500/50 font-mono">CresceFit v2.4.0 • Stats updated just now</p>
                 </div>
             </main>
         </div>

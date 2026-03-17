@@ -24,20 +24,26 @@ export const formatDayLabel = (dateStr) => {
     const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
     if (dateStr === yesterdayStr) return 'Ontem';
 
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    if (dateStr === tomorrowStr) return 'Amanhã';
+
     // Format as DD/MM
     const [, month, day] = dateStr.split('-');
     return `${day}/${month}`;
 };
 
 /**
- * Returns an array of the last 7 days, each with { date, label, dayOfWeek }.
- * Ordered from most recent (today) to oldest.
+ * Returns an array of the last 7 days + tomorrow, each with { date, label, dayOfWeek }.
+ * Ordered from oldest to newest (Tomorrow being the last).
  */
-export const getLast7Days = () => {
+export const getDietDays = () => {
     const days = [];
-    for (let i = 0; i < 7; i++) {
+    // From 6 days ago to tomorrow (total 8 days)
+    for (let i = -6; i <= 1; i++) {
         const d = new Date();
-        d.setDate(d.getDate() - i);
+        d.setDate(d.getDate() + i);
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');

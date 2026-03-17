@@ -1,16 +1,16 @@
-# ⚡ PulseFit
+# ⚡ Cresce Fit
  
-![PulseFit Cover](https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop)
+![Cresce Fit Cover](https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop)
 
 > **"Sua evolução começa agora. Supere-se."**
 
-O **PulseFit** é a sua plataforma definitiva para gerenciamento de treinos de musculação, dieta e progresso pessoal. Projetado com uma interface futurista "Cyber/Neon", ele transforma a rotina de exercícios em uma experiência visual imersiva e motivadora.
+O **Cresce Fit** é a sua plataforma definitiva para gerenciamento de treinos de musculação, dieta e progresso pessoal. Projetado com uma interface futurista "Cyber/Neon", ele transforma a rotina de exercícios em uma experiência visual imersiva e motivadora.
 
 ---
 
 ## 📱 Download do Aplicativo (Android)
 Baixe a versão mais recente e instalável para o seu celular Android clicando no link do Google Drive abaixo:
-🔗 **[Baixar PulseFit.apk](https://drive.google.com/drive/folders/1Ie-4WGZ_VHsZ1ZJzSF1sceaLnyX3UT1j?usp=sharing)**
+🔗 **[Baixar Cresce Fit.apk](https://drive.google.com/drive/folders/1Ie-4WGZ_VHsZ1ZJzSF1sceaLnyX3UT1j?usp=sharing)**
 
 ---
 
@@ -32,19 +32,20 @@ Baixe a versão mais recente e instalável para o seu celular Android clicando n
 *   **Banco de Dados Brasileiro:** Integração com a tabela **TACO** e alimentos comuns do dia a dia.
 *   **Busca Inteligente:** Pesquise alimentos instantaneamente ou cadastre seus próprios itens personalizados.
 *   **Controle de Macros:** Visualização detalhada de Calorias, Proteínas, Carboidratos, Gorduras e Fibras com gráficos de progresso.
+*   **Planejamento Antecipado:** Registre alimentos para **Hoje** ou **Amanhã** para facilitar sua rotina.
 *   **Diário Alimentar:** Registre Café da Manhã, Almoço, Jantar e Lanches com cálculo automático de porções.
 *   **Hidratação:** Tracker de água integrado para garantir sua meta diária.
 *   **Favoritos:** Salve seus alimentos mais consumidos para acesso rápido.
 
 ### 👥 **Comunidade (Social)** (ainda em desenvolvimento)
 *   **Feed de Atividades:** Veja os treinos e conquistas de outros usuários.
-*   **Ranking:** Compare seu progresso com a comunidade PulseFit.
+*   **Ranking:** Compare seu progresso com a comunidade Cresce Fit.
 
 ---
 
 ## 🎨 Design & Tecnologia
 
-O PulseFit foi construído com as tecnologias mais modernas do mercado para garantir performance, responsividade e beleza.
+O Cresce Fit foi construído com as tecnologias mais modernas do mercado para garantir performance, responsividade e beleza.
 
 ### **Tech Stack**
 *   **Frontend:** [React 19](https://react.dev/) + [Vite](https://vitejs.dev/) - Performance extrema.
@@ -62,7 +63,7 @@ O PulseFit foi construído com as tecnologias mais modernas do mercado para gara
 
 ## 🤝 Contribuição
 
-O PulseFit é um projeto em constante evolução. Sugestões e Pull Requests são bem-vindos!
+O Cresce Fit é um projeto em constante evolução. Sugestões e Pull Requests são bem-vindos!
 
 1.  Fork o projeto.
 2.  Crie sua Feature Branch (`git checkout -b feature/NovaFeature`).

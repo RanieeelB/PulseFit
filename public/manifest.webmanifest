@@ -1,4 +1,8 @@
 {
+  "name": "CresceFit",
+  "short_name": "CresceFit",
+  "start_url": "/",
+  "display": "standalone",
   "icons": [
     {
       "src": "../icons/icon-48.webp",

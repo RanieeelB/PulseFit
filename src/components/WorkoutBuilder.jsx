@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { Plus, Search, Trash2, Save, Dumbbell, Sparkles } from 'lucide-react';
+import { Plus, Search, Trash2, Save, Dumbbell, Sparkles, ArrowLeft, SortAsc } from 'lucide-react';
 import { iconMap, getIcon } from '../utils/iconMap';
 
 export default function WorkoutBuilder({ onSave, onCancel, initialData }) {

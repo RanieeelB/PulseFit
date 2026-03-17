@@ -3,7 +3,7 @@ import { X, Search, ScanBarcode, Plus, Minus, ChevronRight, Flame, Heart, ArrowR
 import { foodService } from '../services/foodService';
 import { getLocalDate } from '../utils/dateUtils';
 
-const AddFoodModal = ({ isOpen, onClose, mealType, onFoodAdded }) => {
+const AddFoodModal = ({ isOpen, onClose, mealType, onFoodAdded, date }) => {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [selectedFood, setSelectedFood] = useState(null);
@@ -140,7 +140,7 @@ const AddFoodModal = ({ isOpen, onClose, mealType, onFoodAdded }) => {
                 foodId: selectedFood.id,
                 mealType: mealType,
                 quantityGrams: portion,
-                date: getLocalDate()
+                date: date || getLocalDate()
             };
             await foodService.addFoodLog(entry);
             onFoodAdded();

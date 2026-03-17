@@ -1,10 +1,10 @@
 import React from 'react';
-import { getLast7Days } from '../utils/dateUtils';
+import { getDietDays, getLocalDate } from '../utils/dateUtils';
 import { Calendar } from 'lucide-react';
 
 export default function DaySelector({ selectedDate, onSelectDate }) {
-    // Reverse so oldest is first (left) and today is last (right)
-    const days = getLast7Days().reverse();
+    const days = getDietDays();
+    const today = getLocalDate();
 
     return (
         <div className="mb-6">
@@ -12,10 +12,11 @@ export default function DaySelector({ selectedDate, onSelectDate }) {
                 <Calendar size={14} className="text-slate-500" />
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Histórico</span>
             </div>
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className="grid grid-cols-8 gap-1.5">
                 {days.map((day) => {
                     const isSelected = day.date === selectedDate;
-                    const isToday = day.label === 'Hoje';
+                    const isToday = day.date === today;
+                    const isTomorrow = day.label === 'Amanhã';
 
                     return (
                         <button

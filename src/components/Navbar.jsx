@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { userService } from '../services/userService';
 import { User, LogIn, Menu, X, Dumbbell, BarChart2, Utensils, Users, Bell } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
-import logo from '../assets/logopulsefit.png.jpg';
+import logo from '../assets/CresceFitLogo.svg';
 
 export default function Navbar() {
     const [user, setUser] = useState(null);
@@ -51,8 +51,11 @@ export default function Navbar() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
                         {/* Logo */}
-                        <div className="flex items-center">
-                            <img src={logo} alt="PulseFit" className="h-16 w-auto" />
+                        <div className="flex items-center gap-2">
+                            <img src={logo} alt="CresceFit" className="h-10 w-auto drop-shadow-[0_0_15px_rgba(91,19,236,0.3)]" />
+                            <span className="text-xl font-display font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                                CresceFit
+                            </span>
                         </div>
 
                         {/* Desktop Links */}

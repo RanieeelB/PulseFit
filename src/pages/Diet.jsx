@@ -36,7 +36,10 @@ export default function Diet() {
     const [copyToast, setCopyToast] = useState(null);
     const [copying, setCopying] = useState(false);
 
-    const isToday = selectedDate === getLocalDate();
+    const today = getLocalDate();
+    const isToday = selectedDate === today;
+    const isFuture = selectedDate > today;
+    const isEditable = isToday || isFuture;
 
     // Form State
     const [formData, setFormData] = useState({
@@ -366,7 +369,7 @@ export default function Diet() {
                                                     <Copy size={13} />
                                                     <span className="hidden sm:inline">Copiar</span> ontem
                                                 </button>
-                                                {isToday && (
+                                                {isEditable && (
                                                     <button
                                                         onClick={() => openAddFoodModal(meal)}
                                                         className="p-2 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors hover:shadow-[0_0_10px_rgba(139,92,246,0.2)]"
@@ -400,7 +403,7 @@ export default function Diet() {
                                                                 <span className="text-slate-400/70">F:{log.calculated.fiber || 0}g</span>
                                                             </div>
                                                         </div>
-                                                        {isToday && (
+                                                        {isEditable && (
                                                             <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                                                                 <button
                                                                     onClick={() => handleEditLog(log)}
@@ -442,6 +445,7 @@ export default function Diet() {
                     isOpen={modalOpen}
                     onClose={() => setModalOpen(false)}
                     mealType={selectedMeal}
+                    date={selectedDate}
                     onFoodAdded={() => fetchFoodLogs(selectedDate)}
                 />
 
