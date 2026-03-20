@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { isDemoMode, getDemoUser } from '../utils/demoMode';
 
 const defaultProfile = {
     name: 'Novo Usuário',
@@ -23,6 +24,14 @@ export const userService = {
     },
 
     async getProfile() {
+        if (isDemoMode()) {
+            return {
+                ...getDemoUser(),
+                id: 'demo-user-id',
+                created_at: new Date().toISOString()
+            };
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
 
@@ -83,6 +92,11 @@ export const userService = {
     },
 
     async saveProfile(data) {
+        if (isDemoMode()) {
+            console.log('Demo mode: Skipping profile save');
+            return getDemoUser();
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
 
@@ -139,6 +153,16 @@ export const userService = {
     },
 
     async getWeightHistory(period = 'all') {
+        if (isDemoMode()) {
+            // Realistic mock history for demo
+            return [
+                { id: '1', weight: 85, date: '2024-01-01', user_id: 'demo' },
+                { id: '2', weight: 84.2, date: '2024-01-15', user_id: 'demo' },
+                { id: '3', weight: 83.5, date: '2024-02-01', user_id: 'demo' },
+                { id: '4', weight: 82.5, date: new Date().toISOString(), user_id: 'demo' }
+            ];
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 

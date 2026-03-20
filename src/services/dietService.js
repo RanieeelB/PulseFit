@@ -1,5 +1,7 @@
 
 import { supabase } from './supabaseClient.js';
+import { isDemoMode } from '../utils/demoMode';
+import { MOCK_DIET_PROFILE } from './mockData';
 
 const DIET_PROFILE_KEY = 'crescefit_diet_profile';
 const PREV_DIET_PROFILE_KEY = 'pulsefit_diet_profile';
@@ -19,6 +21,10 @@ export const MEAL_DISTRIBUTION = {
 export const dietService = {
     // Save profile to both Supabase and localStorage (localStorage as cache)
     async saveDietProfile(profile) {
+        if (isDemoMode()) {
+            console.log('Demo mode: Skipping diet profile save');
+            return profile;
+        }
         try {
             // Save to localStorage as cache
             localStorage.setItem(DIET_PROFILE_KEY, JSON.stringify(profile));
@@ -58,6 +64,7 @@ export const dietService = {
 
     // Get profile: try Supabase first, then localStorage as fallback
     async getDietProfile() {
+        if (isDemoMode()) return MOCK_DIET_PROFILE;
         try {
             // Try Supabase first (source of truth)
             const { data: { user } } = await supabase.auth.getUser();

@@ -12,12 +12,19 @@ import CardioModal from './components/CardioModal';
 
 import { supabase } from './services/supabaseClient';
 import { useEffect } from 'react';
+import { isDemoMode, setDemoMode } from './utils/demoMode';
 
 function App() {
     useEffect(() => {
+        // Handle /demo hit first
+        if (window.location.pathname.startsWith('/demo')) {
+            setDemoMode(true);
+            return;
+        }
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            if (!session) {
+            if (!session && !isDemoMode()) {
                 // Delay slightly to ensure CustomEvent listeners are attached
                 setTimeout(() => {
                     window.dispatchEvent(new CustomEvent('open-auth-modal'));
@@ -40,10 +47,28 @@ function App() {
     return (
         <Router>
             <div className="min-h-screen bg-background-dark text-slate-800 dark:text-slate-200 font-display flex flex-col overflow-x-hidden relative">
+                {isDemoMode() && (
+                    <div className="bg-primary/20 backdrop-blur-md border-b border-primary/30 py-2.5 px-4 flex items-center justify-between text-xs sm:text-sm font-bold text-primary animate-pulse-slow z-[60]">
+                        <div className="flex items-center gap-2">
+                            <span className="material-icons-round text-base sm:text-lg">visibility</span>
+                            <span>Modo de Demonstração (Apenas Leitura)</span>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setDemoMode(false);
+                                window.location.href = '/';
+                            }}
+                            className="bg-primary text-white px-3 py-1 rounded-lg hover:bg-primary-dark transition-all text-[10px] sm:text-xs"
+                        >
+                            Sair do Demo
+                        </button>
+                    </div>
+                )}
                 <Navbar />
                 <main className="flex-grow w-full">
                     <Routes>
                         <Route path="/" element={<Home />} />
+                        <Route path="/demo" element={<Home />} />
                         <Route path="/progress" element={<Progress />} />
                         <Route path="/diet" element={<Diet />} />
                         <Route path="/social" element={<Social />} />

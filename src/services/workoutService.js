@@ -1,7 +1,11 @@
 import { supabase } from './supabaseClient.js';
+import { isDemoMode } from '../utils/demoMode';
+import { MOCK_WORKOUTS, MOCK_WEEKLY_STATS, MOCK_STREAK, MOCK_LEADERBOARD } from './mockData';
 
 export const workoutService = {
     async getAll() {
+        if (isDemoMode()) return MOCK_WORKOUTS;
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
@@ -20,6 +24,7 @@ export const workoutService = {
     },
 
     async createWorkout(workoutData) {
+        if (isDemoMode()) return { id: Date.now(), ...workoutData, status: 'pending' };
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
 
@@ -48,6 +53,7 @@ export const workoutService = {
     },
 
     async updateWorkout(id, workoutData) {
+        if (isDemoMode()) return { id, ...workoutData };
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
 
@@ -77,6 +83,7 @@ export const workoutService = {
     },
 
     async deleteWorkout(id) {
+        if (isDemoMode()) return;
         // First delete logs
         const { error: logError } = await supabase
             .from('workout_logs')
@@ -124,6 +131,7 @@ export const workoutService = {
 
     // Logs & Stats
     async addLog(workoutId, durationMinutes, calories) {
+        if (isDemoMode()) return;
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
@@ -151,6 +159,7 @@ export const workoutService = {
 
     // Cardio Logs
     async addCardioLog(cardioType, durationMinutes, calories) {
+        if (isDemoMode()) return { duration: durationMinutes, calories, prs: [], improvements: [], cycleCompleted: false, weeklyStats: null };
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
 
@@ -305,6 +314,8 @@ export const workoutService = {
     },
 
     async getWeeklyStats() {
+        if (isDemoMode()) return MOCK_WEEKLY_STATS;
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { workouts: 0, minutes: 0, calories: 0, daysCompleted: [] };
 
@@ -349,6 +360,8 @@ export const workoutService = {
 
     // Stats: Streak & Performance
     async getStreak() {
+        if (isDemoMode()) return MOCK_STREAK;
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { current: 0, best: 0 };
 
@@ -441,6 +454,8 @@ export const workoutService = {
     },
 
     async getMonthlyPerformance() {
+        if (isDemoMode()) return 75; // Mock 75% performance
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return 0;
 
@@ -483,6 +498,16 @@ export const workoutService = {
 
     // New Frequency Analysis
     async getFrequency(period = 'week') {
+        if (isDemoMode()) {
+            if (period === 'week') {
+                return [
+                    { label: 'SEG', count: 1 }, { label: 'TER', count: 1 }, { label: 'QUA', count: 0 },
+                    { label: 'QUI', count: 1 }, { label: 'SEX', count: 1 }, { label: 'SÁB', count: 0 }, { label: 'DOM', count: 0 }
+                ];
+            }
+            return [];
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
@@ -569,6 +594,11 @@ export const workoutService = {
 
     // Personal Records
     async getPersonalRecords() {
+        if (isDemoMode()) return [
+            { id: 1, exercise_name: 'Supino Reto', weight: 80, date: '2024-03-01' },
+            { id: 2, exercise_name: 'Agachamento', weight: 120, date: '2024-02-15' }
+        ];
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
@@ -701,6 +731,7 @@ export const workoutService = {
     },
 
     async getLeaderboard() {
+        if (isDemoMode()) return MOCK_LEADERBOARD;
         try {
             const last7Days = new Date();
             last7Days.setDate(last7Days.getDate() - 7);

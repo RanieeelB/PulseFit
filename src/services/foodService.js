@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient';
 import { getLocalDate } from '../utils/dateUtils';
+import { isDemoMode } from '../utils/demoMode';
+import { MOCK_FOODS } from './mockData';
 
 export const foodService = {
     // -------------------------------------------------------------------------
@@ -7,6 +9,9 @@ export const foodService = {
     // -------------------------------------------------------------------------
 
     async searchFoods(query) {
+        if (isDemoMode()) {
+            return MOCK_FOODS.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
+        }
         if (!query || query.length < 2) return [];
 
         try {
@@ -26,6 +31,7 @@ export const foodService = {
     },
 
     async getRecentFoods() {
+        if (isDemoMode()) return MOCK_FOODS.slice(0, 2);
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
@@ -144,6 +150,7 @@ export const foodService = {
     },
 
     async addCustomFood(foodData) {
+        if (isDemoMode()) return { id: Date.now(), ...foodData };
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
@@ -167,6 +174,20 @@ export const foodService = {
     // -------------------------------------------------------------------------
 
     async getDailyLog(date) {
+        if (isDemoMode()) {
+            return [
+                {
+                    id: '1', meal_type: 'breakfast', quantity_grams: 200, date: date,
+                    food: MOCK_FOODS[2], // Ovo
+                    calculated: { calories: 310, protein: 26, carbs: 2, fat: 22, fiber: 0 }
+                },
+                {
+                    id: '2', meal_type: 'lunch', quantity_grams: 150, date: date,
+                    food: MOCK_FOODS[0], // Frango
+                    calculated: { calories: 247, protein: 46, carbs: 0, fat: 5, fiber: 0 }
+                }
+            ];
+        }
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
@@ -223,6 +244,7 @@ export const foodService = {
     },
 
     async addFoodLog(logEntry) {
+        if (isDemoMode()) return { id: Date.now(), ...logEntry };
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
@@ -248,6 +270,7 @@ export const foodService = {
     },
 
     async deleteFoodLog(logId) {
+        if (isDemoMode()) return true;
         try {
             const { error } = await supabase
                 .from('food_log')
